@@ -1,8 +1,11 @@
 package com.echec.game;
 
 import com.echec.pieces.*;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class Grille {
 
@@ -14,10 +17,10 @@ public class Grille {
     public Grille() {
         boolean noir = true;
 
-        for (int ligne = 0; ligne < 8; ligne++) {
+        for (int ligne = 1; ligne <= 8; ligne++) {
             noir = !noir;
-            for (int colonne = 0; colonne < 8; colonne ++) {
-                grilleCases.add(new Case(ligne+1, colonne+1, noir ? "noir" : "blanc"));
+            for (int colonne = 8; colonne >= 0; colonne --) {
+                grilleCases.add(new Case(ligne, colonne, noir ? "noir" : "blanc"));
                 noir = !noir;
             }
         }
@@ -85,5 +88,15 @@ public class Grille {
         }
     }
 
+    public JSONObject getJSONObject() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("id", this.id);
+        JSONArray jsonArray = new JSONArray();
+        for (Case c : this.grilleCases) {
+            jsonArray.add(c.getJSONObject());
+        }
+        jsonObject.put("grilleCases", jsonArray);
+        return jsonObject;
+    }
 
 }

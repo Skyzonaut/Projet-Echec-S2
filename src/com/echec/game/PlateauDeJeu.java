@@ -1,6 +1,12 @@
 package com.echec.game;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,11 +20,12 @@ public class PlateauDeJeu {
 
     public List<Historique> historique = new ArrayList<Historique> ();
 
-
+    private static FileWriter fw;
     public PlateauDeJeu() {
         this.id = LocalDateTime.now().toString();
         this.grille = new Grille();
-        this.grille.initialiserGrille();
+        this.initPlateau();
+        this.save();
 //        this.matrice.printGrilleInfo();
     }
 
@@ -95,22 +102,49 @@ public class PlateauDeJeu {
     }
 
     public void save() {
+        String dossierSauvegardeChemin = "./save/";
+        File repertoire = new File(dossierSauvegardeChemin);
+        JSONObject jsonObject = this.getJSONObject();
+        LocalDateTime daetEtHeure = LocalDateTime.now();
+        DateTimeFormatter formatDateEtHeure = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
+        String dateEtHeureString = formatDateEtHeure.format(daetEtHeure);
+        String nouveauFichierChemin = dossierSauvegardeChemin + dateEtHeureString + ".json";
+
+        if (repertoire.isDirectory()) {
+            try {
+                fw = new FileWriter(nouveauFichierChemin);
+                fw.write(jsonObject.toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    fw.flush();
+                    fw.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public void initPlateau() {
+        this.grille.initialiserGrille();
     }
 
 
     public void deplacerPiece(Case origin, Case destination) {
-        destination.piece = origin.piece;
-        origin.vider();
+        if (destination.estVide()) {
+            destination.piece = origin.piece;
+            origin.vider();
+        } else {
+            System.out.println("La destination est remplie, veuillez utiliser la commande [prendre]");
+        }
     }
 
 
     public void prendrePiece(Case origin, Case destination) {
         destination.piece.setEtat(false);
         destination.vider();
-
         deplacerPiece(origin, destination);
     }
 
@@ -120,13 +154,19 @@ public class PlateauDeJeu {
     }
 
 
-    void setId(String value) {
+    public void setId(String value) {
         this.id = value;
     }
 
 
-    String getId() {
+    public String getId() {
         return this.id;
     }
 
+    public JSONObject getJSONObject() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("id", this.id);
+        jsonObject.put("grille", this.grille.getJSONObject());
+        return jsonObject;
+    }
 }
