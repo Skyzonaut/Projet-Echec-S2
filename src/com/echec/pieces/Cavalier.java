@@ -18,11 +18,4 @@ public class Cavalier extends Piece {
 
         return listeCasesDeplacement;
     }
-
-    public static void main(String[] args) {
-        Cavalier cav = new Cavalier("cav_1", "blanc", true);
-        System.out.println(cav);
-
-    }
-
 }
