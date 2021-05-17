@@ -1,5 +1,6 @@
 package com.echec.pieces;
 import com.echec.game.Case;
+import org.json.simple.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,14 @@ public class Pion extends Piece {
         this.id = id;
         this.couleur = couleur;
         this.etat = etat;
+        this.pieceNoirUTF = "♙";
+        this.pieceBlancheUTF = "♟";
+    }
+
+    public Pion(JSONObject jsonObject) {
+        this.id = (String) jsonObject.get("id");
+        this.couleur = (String) jsonObject.get("couleur");
+        this.etat = (boolean) jsonObject.get("etat");
         this.pieceNoirUTF = "♙";
         this.pieceBlancheUTF = "♟";
     }

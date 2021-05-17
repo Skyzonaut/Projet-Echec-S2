@@ -4,6 +4,8 @@ import com.echec.pieces.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -16,13 +18,24 @@ public class Grille {
 
     public Grille() {
         boolean noir = true;
-
+        this.id = "grille " + getFormatDate();
         for (int ligne = 1; ligne <= 8; ligne++) {
             noir = !noir;
-            for (int colonne = 8; colonne >= 0; colonne --) {
+            for (int colonne = 8; colonne > 0; colonne --) {
                 grilleCases.add(new Case(ligne, colonne, noir ? "noir" : "blanc"));
                 noir = !noir;
             }
+        }
+    }
+
+    public Grille(JSONObject jsonObject) {
+        this.id = (String) jsonObject.get("idGrille");
+        JSONArray jsonArray = (JSONArray) jsonObject.get("grilleCases");
+        Iterator<JSONObject> iterator = jsonArray.iterator();
+        this.grilleCases = new ArrayList<>();
+        while (iterator.hasNext()) {
+            JSONObject pieceJsonObject = iterator.next();
+            this.grilleCases.add(new Case(pieceJsonObject));
         }
     }
 
@@ -88,15 +101,33 @@ public class Grille {
         }
     }
 
+    public String toString() {
+        String str = "";
+        for (int colonne = 1; colonne <= 8; colonne ++) {
+            str += String.format("[Colonne: %d]", colonne) + "\n";
+            for (int ligne = 1; ligne <= 8; ligne++) {
+                str += this.getCase(ligne, colonne) + "\n";
+            }
+        }
+        return str;
+    }
+
     public JSONObject getJSONObject() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("id", this.id);
+        jsonObject.put("idGrille", this.id);
         JSONArray jsonArray = new JSONArray();
         for (Case c : this.grilleCases) {
             jsonArray.add(c.getJSONObject());
         }
         jsonObject.put("grilleCases", jsonArray);
         return jsonObject;
+    }
+
+    public String getFormatDate() {
+        LocalDateTime dateEtHeure = LocalDateTime.now();
+        DateTimeFormatter formatDateEtHeure = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
+        String dateEtHeureString = formatDateEtHeure.format(dateEtHeure);
+        return dateEtHeureString;
     }
 
 }

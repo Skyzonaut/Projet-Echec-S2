@@ -1,8 +1,8 @@
 package com.echec.pieces;
 import com.echec.game.Case;
+import org.json.simple.JSONObject;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class Tour extends Piece {
 
@@ -14,6 +14,13 @@ public class Tour extends Piece {
         this.pieceBlancheUTF = "♜";
     }
 
+    public Tour(JSONObject jsonObject) {
+        this.id = (String) jsonObject.get("id");
+        this.couleur = (String) jsonObject.get("couleur");
+        this.etat = (boolean) jsonObject.get("etat");
+        this.pieceNoirUTF = "♖";
+        this.pieceBlancheUTF = "♜";
+    }
     public ArrayList<Case> getDeplacement(String mode) {
         ArrayList<Case> listeCasesDeplacement = new ArrayList<Case>();
 
