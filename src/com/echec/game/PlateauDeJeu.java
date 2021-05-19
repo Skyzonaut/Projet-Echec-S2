@@ -119,9 +119,48 @@ public class PlateauDeJeu {
         }
     }
 
-    public boolean testerDeplacement() {
-        return true;
-    }
+    public boolean testerDeplacement(Case origin, Case destination) {
+        int x = origin.x;
+        int y = origin.y;
+        int dx = destination.x;
+        int dy = destination.y;
+        String nom = this.grille.getCase(x, y).piece.getId();
+        if (nom.equals("Reine_Noir_1")) {
+            if (dx - x == dy - y) {
+                return true;
+            }
+            if (dx == x) {
+                return true;
+            }
+            if (dy == y) {
+                return true;
+            }
+            return false;
+        }
+        if (nom.equals("Tour_Noir_1")) {
+            if (dx == x) {
+                return true;
+            }
+            if (dy == y) {
+                return true;
+            }
+            return false;
+        }
+        if (nom.equals("Fou_Noir_1")) {
+            if (dx - x == dy -y) {
+                return true;
+            }
+            return false;
+        }
+        if (nom.equals("Cavalier_Noir_1")) {
+            if (((dx == x + 2) || (dx == x - 2)) && ((dy == y + 1) || (dy == y - 1))) {
+                return true;
+            }
+            if (((dx == x + 1) || (dx == x - 1)) && ((dy == y + 2) || (dy == y - 2))) {
+                return true;
+            }
+            return false;
+        }
 
     public void setId(String value) {
         this.id = value;
