@@ -5,7 +5,7 @@ import com.echec.Tools;
 public class PlateauDeJeu {
 
     private String id;
-    private Grille grille;
+    private final Grille grille;
     public Historique historique = new Historique();
 
     public PlateauDeJeu() {
@@ -33,20 +33,19 @@ public class PlateauDeJeu {
 
     public String toString(int hauteur, int largeur) {
 
-        String dessinPlateau = "-";
+        StringBuilder dessinPlateau = new StringBuilder("-");
 
         for (int i = 0; i < 8 + 1; i++) {
-            for (int j = 0; j < largeur; j++) {
-                dessinPlateau += "-";
-            } dessinPlateau += "-";
-        } dessinPlateau += "\n";
+            dessinPlateau.append("-".repeat(Math.max(0, largeur)));
+            dessinPlateau.append("-");
+        } dessinPlateau.append("\n");
 
         int ligneCompte = 1;
 
         for (int ligne = 1; ligne < hauteur * 8; ligne++) {
 
             String contenu = " ";
-            dessinPlateau += "|";
+            dessinPlateau.append("|");
 
             for (int colonne = 1; colonne <= 8; colonne++) {
                 if (this.grille.getCase(colonne, ligneCompte).piece != null) {
@@ -55,32 +54,31 @@ public class PlateauDeJeu {
 
                 for (int j = 0; j < largeur ; j++) {
                     if (j == (largeur / 2)) {
-                        if (contenu != " ") {
-                            dessinPlateau += ligne % hauteur == 0 ? " " : contenu;
+                        if (!contenu.equals(" ")) {
+                            dessinPlateau.append(ligne % hauteur == 0 ? " " : contenu);
                         } else {
-                            dessinPlateau += " ";
+                            dessinPlateau.append(" ");
                         }
                     } else {
-                        dessinPlateau += ligne % hauteur == 0 ? "-" : " ";
+                        dessinPlateau.append(ligne % hauteur == 0 ? "-" : " ");
                     }
                 }
 
                 contenu = " ";
 
-                dessinPlateau += ligne % hauteur == 0 ? "+" : "|";
-            } dessinPlateau += "\n";
+                dessinPlateau.append(ligne % hauteur == 0 ? "+" : "|");
+            } dessinPlateau.append("\n");
 
             if (ligne % hauteur == 0)  ligneCompte ++;
         }
 
-        dessinPlateau += "-";
+        dessinPlateau.append("-");
         for (int i = 0; i < 8 + 1; i++) {
-            for (int j = 0; j < largeur; j++) {
-                dessinPlateau += "-";
-            } dessinPlateau += "-";
-        } dessinPlateau += "\n";
+            dessinPlateau.append("-".repeat(Math.max(0, largeur)));
+            dessinPlateau.append("-");
+        } dessinPlateau.append("\n");
 
-        return dessinPlateau;
+        return dessinPlateau.toString();
     }
 
     public Grille getGrille() {
@@ -93,7 +91,6 @@ public class PlateauDeJeu {
     public void initPlateau() {
         this.grille.initialiserGrille();
     }
-
 
     public void deplacerPiece(Case origine, Case destination) {
         deplacerPiece(origine, destination, true);
