@@ -18,8 +18,8 @@ import java.util.regex.Pattern;
 public class Jeu {
 
     public PlateauDeJeu plateau;
-    public static final String[] arrayDesCommandes = {"deplacer", "prendre", "save", "charger"};
-    public static final String[] arrayDesCommandesRaccourci = {"d", "p", "s", "c"};
+    public static final String[] arrayDesCommandes = {"deplacer", "prendre", "save", "charger", "undo"};
+    public static final String[] arrayDesCommandesRaccourci = {"d", "p", "s", "c", "u"};
     public static final List<String> listeDesCommandes = Arrays.asList(arrayDesCommandes);
     public static final List<String> listeDesCommandesRaccourci = Arrays.asList(arrayDesCommandesRaccourci);
     private String tour;
@@ -44,6 +44,9 @@ public class Jeu {
 
     public void jouer() {
 
+        int[] listeParam = lancerPartie();
+        int niveauDeDifficulté = listeParam[0];
+
         boolean jeuEnCours = true;
 
         while (jeuEnCours) {
@@ -54,24 +57,32 @@ public class Jeu {
 
                 switch (commande) {
                     case "prendre":
-                    case "p" :
+                    case "p":
                         this.prendrePiece();
                         break;
 
                     case "deplacer":
-                    case "d" :
+                    case "d":
                         this.deplacerPiece();
                         break;
 
                     case "save":
-                    case "s" :
+                    case "s":
                         System.out.println(this.save());
                         break;
 
                     case "charger":
-                    case "c" :
+                    case "c":
                         System.out.println(this.charger());
                         break;
+
+                    case "undo":
+                    case "u":
+                        if (niveauDeDifficulté == 2) {
+                            this.undo();
+                        } else {
+                            System.out.println("Vous ne pouvez pas revenir en arrière dans ce niveau de difficulté!");
+                        }
 
                     default:
                         System.out.println("Commande non reconnu");
@@ -95,6 +106,10 @@ public class Jeu {
         Case origine = this.getCaseOrigineDepuisCoordonneeInput();
         Case destination = this.getCaseDestinationDepuisCoordonneeInput();
         plateau.deplacerPiece(origine, destination);
+    }
+
+    public void undo() {
+
     }
 
     public String save() {
@@ -123,6 +138,7 @@ public class Jeu {
     }
 
     public String charger() {
+
         // On demande si l'utilisateur veut sauvegarder sa partie avant
         System.out.println("Vous allez écraser votre partie - Voulez vous la sauvegarder ?");
         String ouiNon = Tools.getOuiNon();
@@ -164,6 +180,16 @@ public class Jeu {
         } else { stringRetour = "Dossier de sauvegardé non trouvé"; }
         stringRetour = "Partie chargée";
         return stringRetour;
+    }
+
+    public int[] lancerPartie(){
+        int[] listeParam = new int[3];
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Pour démarrer une partie tapez : [jouer]\nPuis sélectionner le niveau de difficulté");
+        System.out.println("\n1 - Normal : Règles standards\n2 - Apprenti : Possibilité de retour en arrière");
+        listeParam[0] = scanner.nextInt();
+        System.out.println("-------- Début de la partie --------");
+        return listeParam;
     }
 
     public String getCommandeInput() {
