@@ -5,7 +5,6 @@ import com.echec.game.Case;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Scanner;
 
 public class Tools {
@@ -52,14 +51,22 @@ public class Tools {
     public static String getFormatDate() {
         LocalDateTime dateEtHeure = LocalDateTime.now();
         DateTimeFormatter formatDateEtHeure = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
-        String dateEtHeureString = formatDateEtHeure.format(dateEtHeure);
-        return dateEtHeureString;
+        return formatDateEtHeure.format(dateEtHeure);
+    }
+
+    public static LocalDateTime getLocalDateTimeFromFormatDate(String dateTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyMMdd-HHmmss");
+        return LocalDateTime.parse(dateTime, formatter);
+    }
+
+    public static String getFormatDate(LocalDateTime dateEtHeure) {
+        DateTimeFormatter formatDateEtHeure = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
+        return formatDateEtHeure.format(dateEtHeure);
     }
 
     public static String dateDateTimeMagnify(LocalDateTime e) {
         DateTimeFormatter formatDateEtHeure = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-        String dateEtHeureString = formatDateEtHeure.format(e);
-        return dateEtHeureString;
+        return formatDateEtHeure.format(e);
     }
 
     public static String coordToChessNotation(Case c) {
@@ -71,7 +78,7 @@ public class Tools {
 
     public static String toNotationEchec(Case origine, Case destination) {
         String str = "";
-        str += String.format("%s%s (%s) | [%d %d] -> [%d %d]",
+        str += String.format("%s%s | [%d %d] -> [%d %d]",
                 coordToChessNotation(origine), coordToChessNotation(destination),
                 origine.x, origine.y, destination.x, destination.y);
         return str;
