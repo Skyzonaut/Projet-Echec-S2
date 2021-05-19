@@ -17,6 +17,7 @@ public class PlateauDeJeu {
     public PlateauDeJeu(JSONObject jsonObject) {
         this.id = (String) jsonObject.get("id");
         this.grille = new Grille((JSONObject) jsonObject.get("grille"));
+        this.historique = new Historique((JSONObject) jsonObject.get("historique"));
     }
 
     public void afficher(int hauteur, int largeur) {
@@ -176,6 +177,7 @@ public class PlateauDeJeu {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("id", this.id);
         jsonObject.put("grille", this.grille.getJSONObject());
+        jsonObject.put("historique", this.historique.getJSONObject());
         return jsonObject;
     }
 }

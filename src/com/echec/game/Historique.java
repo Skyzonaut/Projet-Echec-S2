@@ -1,7 +1,12 @@
 package com.echec.game;
 
+import com.echec.Tools;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -9,11 +14,26 @@ public class Historique {
 
     private String id;
     private int index = 0;
-    public final LinkedHashMap<Integer, Evenement> historique = new LinkedHashMap<>();
+    public LinkedHashMap<Integer, Evenement> historique = new LinkedHashMap<>();
     private LocalDateTime dateEtHeure;
 
     public Historique() {
         this.addEvenement("Création", "Création initiale de l'historique");
+        this.id = Tools.getFormatDate();
+    }
+
+    public Historique(JSONObject jsonObject) {
+        this.id = (String) jsonObject.get("idHistorique");
+        JSONArray jsonArray = (JSONArray) jsonObject.get("listeEvenements");
+        Iterator<JSONObject> iterator = jsonArray.iterator();
+        this.historique = new LinkedHashMap<>();
+        this.index = 0;
+        while (iterator.hasNext()) {
+            JSONObject pieceJsonObject = iterator.next();
+            this.historique.put(this.index, new Evenement(pieceJsonObject));
+            this.index++;
+        }
+
     }
 
     public String getId() {
@@ -77,15 +97,26 @@ public class Historique {
 
     public String toString() {
         StringBuilder str = new StringBuilder();
-        str.append("-".repeat(80) + "\n");
+        str.append("-".repeat(80)).append("\n");
         for (Map.Entry<Integer, Evenement> entry : this.historique.entrySet()) {
             str.append(entry.getValue()).append("\n");
         }
-        str.append("-".repeat(80) + "\n");
+        str.append("-".repeat(80)).append("\n");
         return str.toString();
     }
 
     public void afficher() {
         System.out.println(this);
+    }
+
+    public JSONObject getJSONObject() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("idHistorique", this.id);
+        JSONArray jsonArray = new JSONArray();
+        for (Map.Entry<Integer, Evenement> entry : this.historique.entrySet()) {
+            jsonArray.add(entry.getValue().getJSONObject());
+        }
+        jsonObject.put("listeEvenements", jsonArray);
+        return jsonObject;
     }
 }

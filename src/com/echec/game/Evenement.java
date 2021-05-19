@@ -1,6 +1,7 @@
 package com.echec.game;
 
 import com.echec.Tools;
+import org.json.simple.JSONObject;
 
 import java.time.LocalDateTime;
 
@@ -30,6 +31,13 @@ public class Evenement {
         this.dateEtHeure = e.getDateEtHeure();
         this.contenu = e.getContenu();
         this.type = e.getType();
+    }
+
+    public Evenement(JSONObject jsonObject) {
+        this.id = (String) jsonObject.get("id");
+        this.dateEtHeure = Tools.getLocalDateTimeFromFormatDate((String) jsonObject.get("dateEtHeure"));
+        this.contenu = (String) jsonObject.get("contenu");
+        this.type = (String) jsonObject.get("type");
     }
 
     public String getType() {
@@ -69,4 +77,14 @@ public class Evenement {
         return String.format("%-15s : %-13s | %-8s | %s",
                 this.id, this.type, Tools.dateDateTimeMagnify(this.dateEtHeure), this.contenu);
     }
+
+    public JSONObject getJSONObject() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("id", this.id);
+        jsonObject.put("dateEtHeure", Tools.getFormatDate(this.dateEtHeure));
+        jsonObject.put("type", this.type);
+        jsonObject.put("contenu", this.contenu);
+        return jsonObject;
+    }
+
 }
