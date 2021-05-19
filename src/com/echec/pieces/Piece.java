@@ -1,5 +1,7 @@
 package com.echec.pieces;
 import com.echec.game.Case;
+import org.json.simple.JSONObject;
+
 import java.util.ArrayList;
 
 public abstract class Piece {
@@ -54,4 +56,12 @@ public abstract class Piece {
 
     public abstract ArrayList<Case> getDeplacement(String mode);
 
+    public JSONObject getJSONObject() {
+        String str = "";
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("id", this.id);
+        jsonObject.put("couleur", this.couleur);
+        jsonObject.put("etat", this.etat);
+        return jsonObject;
+    }
 }

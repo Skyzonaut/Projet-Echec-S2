@@ -1,25 +1,26 @@
 package com.echec.game;
+import org.json.simple.JSONObject;
+import com.echec.Tools;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PlateauDeJeu {
 
     private String id;
-
-
     private Grille grille;
-
-
     public List<Historique> historique = new ArrayList<Historique> ();
-
-
     public PlateauDeJeu() {
-        this.id = LocalDateTime.now().toString();
+
+        this.id = "plateau " + Tools.getFormatDate();
         this.grille = new Grille();
-        this.grille.initialiserGrille();
+        this.initPlateau();
 //        this.matrice.printGrilleInfo();
+    }
+
+    public PlateauDeJeu(JSONObject jsonObject) {
+        this.id = (String) jsonObject.get("id");
+        this.grille = new Grille((JSONObject) jsonObject.get("grille"));
     }
 
     public void afficher(int hauteur, int largeur) {
@@ -52,7 +53,6 @@ public class PlateauDeJeu {
             dessinPlateau += "|";
 
             for (int colonne = 1; colonne <= 8; colonne++) {
-
                 if (this.grille.getCase(colonne, ligneCompte).piece != null) {
                     contenu = this.grille.getCase(colonne, ligneCompte).piece.utfString();
                 }
@@ -94,26 +94,30 @@ public class PlateauDeJeu {
     public void update() {
     }
 
-    public void save() {
-    }
 
     public void initPlateau() {
+        this.grille.initialiserGrille();
     }
 
 
     public void deplacerPiece(Case origin, Case destination) {
-        destination.piece = origin.piece;
-        origin.vider();
+        if (destination.estVide()) {
+            destination.piece = origin.piece;
+            origin.vider();
+        } else {
+            System.out.println("La destination n'est pas vide, veuillez utiliser la commande [prendre]");
+        }
     }
-
 
     public void prendrePiece(Case origin, Case destination) {
-        destination.piece.setEtat(false);
-        destination.vider();
-
-        deplacerPiece(origin, destination);
+        if (!destination.estVide()) {
+            destination.piece.setEtat(false);
+            destination.vider();
+            deplacerPiece(origin, destination);
+        } else {
+            System.out.println("La destination est pas vide, veuillez utiliser la commande [déplacer]");
+        }
     }
-
 
     public boolean testerDeplacement(Case origin, Case destination) {
         int x = origin.x;
@@ -158,17 +162,18 @@ public class PlateauDeJeu {
             return false;
         }
 
-        return true;
-    }
-
-
-    void setId(String value) {
+    public void setId(String value) {
         this.id = value;
     }
 
-
-    String getId() {
+    public String getId() {
         return this.id;
     }
 
+    public JSONObject getJSONObject() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("id", this.id);
+        jsonObject.put("grille", this.grille.getJSONObject());
+        return jsonObject;
+    }
 }
