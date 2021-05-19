@@ -17,9 +17,11 @@ import java.util.regex.Pattern;
 
 public class Jeu {
 
-    PlateauDeJeu plateau;
+    public PlateauDeJeu plateau;
     public static final String[] arrayDesCommandes = {"deplacer", "prendre", "save", "charger"};
+    public static final String[] arrayDesCommandesRaccourci = {"d", "p", "s", "c"};
     public static final List<String> listeDesCommandes = Arrays.asList(arrayDesCommandes);
+    public static final List<String> listeDesCommandesRaccourci = Arrays.asList(arrayDesCommandesRaccourci);
     private String tour;
     private static FileWriter fw;
 
@@ -28,67 +30,70 @@ public class Jeu {
         this.plateau = new PlateauDeJeu();
     }
 
-    public PlateauDeJeu jouer() {
-        return plateau;
-    }
-
     public void updateHistorique() {
     }
-
-    public void chargerJeu() {
-    }
-
 
     public static void main(String[] args)
 
     {
         Jeu jeu = new Jeu();
-        jeu.jouer();
         jeu.plateau.afficher();
+        jeu.jouer();
+
+    }
+
+    public void jouer() {
 
         boolean jeuEnCours = true;
 
-        while (jeuEnCours)
-        {
+        while (jeuEnCours) {
 
-            String commande = jeu.getCommandeInput().trim();
+            String commande = this.getCommandeInput().trim();
 
-            if (listeDesCommandes.contains(commande))
-            {
+            if (listeDesCommandes.contains(commande) || listeDesCommandesRaccourci.contains(commande)) {
 
-                switch (commande)
-                {
-                    case "prendre" : jeu.prendrePiece();
+                switch (commande) {
+                    case "prendre":
+                    case "p" :
+                        this.prendrePiece();
                         break;
-                    case "deplacer" : jeu.deplacerPiece();
+
+                    case "deplacer":
+                    case "d" :
+                        this.deplacerPiece();
                         break;
-                    case "save" : System.out.println(jeu.save());
+
+                    case "save":
+                    case "s" :
+                        System.out.println(this.save());
                         break;
-                    case "charger" : System.out.println(jeu.charger());
-                    break;
-                    default: System.out.println("Commande non reconnu");
+
+                    case "charger":
+                    case "c" :
+                        System.out.println(this.charger());
+                        break;
+
+                    default:
+                        System.out.println("Commande non reconnu");
                 }
-
-            }
-            else
-            {
+            } else {
                 System.out.println("Commande incompréhensible");
             }
-            jeu.plateau.afficher();
+            this.plateau.afficher();
+            this.plateau.historique.afficher();
         }
     }
 
     public void prendrePiece() {
 
-        Case origine = this.getCaseDepuisCoordonneeInput();
-        Case destination = this.getCaseDepuisCoordonneeInput();
+        Case origine = this.getCaseOrigineDepuisCoordonneeInput();
+        Case destination = this.getCaseDestinationDepuisCoordonneeInput();
         plateau.prendrePiece(origine, destination);
     }
 
     public void deplacerPiece() {
-
-        Case origine = this.getCaseDepuisCoordonneeInput();
-        Case destination = this.getCaseDepuisCoordonneeInput();
+        Case origine = this.getCaseOrigineDepuisCoordonneeInput();
+        Case destination = this.getCaseDestinationDepuisCoordonneeInput();
         plateau.deplacerPiece(origine, destination);
     }
 
@@ -162,7 +167,7 @@ public class Jeu {
     }
 
     public String getCommandeInput() {
-
+        printListeCommande();
         Scanner inputCommandeScanner = new Scanner(System.in);
         String commande = inputCommandeScanner.nextLine();
         return commande;
@@ -170,11 +175,21 @@ public class Jeu {
 
     public void printListeCommande() {
         String strCommande = "[";
-        for (String commande : arrayDesCommandes) {strCommande += commande + "/";};
+        for (String commande : arrayDesCommandes) {strCommande += commande + "/";}
+        strCommande += "] ou leurs raccourcis : [";
+        for (String commande : arrayDesCommandesRaccourci) {strCommande += commande + "/";}
         System.out.println(strCommande + "]");
     }
 
-    public Case getCaseDepuisCoordonneeInput() {
+    public Case getCaseOrigineDepuisCoordonneeInput() {
+        Scanner inputCoordDestinataireScanner = new Scanner(System.in);
+        System.out.println("Origine : [xy ou x y]");
+        String coordDestination = getCoordonneeBonFormat(inputCoordDestinataireScanner);
+        Case destination = convertirCaseDepuisInput(coordDestination, this.plateau.getGrille());
+        return destination;
+    }
+
+    public Case getCaseDestinationDepuisCoordonneeInput() {
 
         Scanner inputCoordDestinataireScanner = new Scanner(System.in);
         System.out.println("Destination : [xy ou x y]");
@@ -182,7 +197,6 @@ public class Jeu {
         Case destination = convertirCaseDepuisInput(coordDestination, this.plateau.getGrille());
         return destination;
     }
-
     public String getCoordonneeBonFormat(Scanner scanner) {
 
         Pattern pattern = Pattern.compile("^\\d \\d$|^\\d\\d$");

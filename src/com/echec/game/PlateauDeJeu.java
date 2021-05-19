@@ -2,20 +2,16 @@ package com.echec.game;
 import org.json.simple.JSONObject;
 import com.echec.Tools;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class PlateauDeJeu {
 
     private String id;
     private Grille grille;
-    public List<Historique> historique = new ArrayList<Historique> ();
-    public PlateauDeJeu() {
+    public Historique historique = new Historique();
 
+    public PlateauDeJeu() {
         this.id = "plateau " + Tools.getFormatDate();
         this.grille = new Grille();
         this.initPlateau();
-//        this.matrice.printGrilleInfo();
     }
 
     public PlateauDeJeu(JSONObject jsonObject) {
@@ -94,26 +90,33 @@ public class PlateauDeJeu {
     public void update() {
     }
 
-
     public void initPlateau() {
         this.grille.initialiserGrille();
     }
 
 
-    public void deplacerPiece(Case origin, Case destination) {
+    public void deplacerPiece(Case origine, Case destination) {
+        deplacerPiece(origine, destination, true);
+    }
+
+    public void deplacerPiece(Case origine, Case destination, boolean updateHistorique) {
         if (destination.estVide()) {
-            destination.piece = origin.piece;
-            origin.vider();
+            destination.piece = origine.piece;
+            if (updateHistorique) {
+                this.historique.addEvenement("Déplacement", Tools.deplacementToNotationEchec(origine, destination));
+            }
+            origine.vider();
         } else {
             System.out.println("La destination n'est pas vide, veuillez utiliser la commande [prendre]");
         }
     }
 
-    public void prendrePiece(Case origin, Case destination) {
+    public void prendrePiece(Case origine, Case destination) {
         if (!destination.estVide()) {
             destination.piece.setEtat(false);
+            this.historique.addEvenement("Prise", Tools.priseToNotationEchec(origine, destination));
             destination.vider();
-            deplacerPiece(origin, destination);
+            deplacerPiece(origine, destination, false);
         } else {
             System.out.println("La destination est pas vide, veuillez utiliser la commande [déplacer]");
         }
@@ -124,8 +127,8 @@ public class PlateauDeJeu {
         int y = origin.y;
         int dx = destination.x;
         int dy = destination.y;
-        String nom = this.grille.getCase(x, y).piece.getId();
-        if (nom.equals("Reine_Noir_1")) {
+        String classe = origin.piece.getClassePiece();
+        if (classe.equalsIgnoreCase("Reine")) {
             if (dx - x == dy - y) {
                 return true;
             }
@@ -137,7 +140,7 @@ public class PlateauDeJeu {
             }
             return false;
         }
-        if (nom.equals("Tour_Noir_1")) {
+        if (classe.equalsIgnoreCase("Tour")) {
             if (dx == x) {
                 return true;
             }
@@ -146,13 +149,13 @@ public class PlateauDeJeu {
             }
             return false;
         }
-        if (nom.equals("Fou_Noir_1")) {
-            if (dx - x == dy -y) {
+        if (classe.equalsIgnoreCase("Fou")) {
+            if (dx - x == dy - y) {
                 return true;
             }
             return false;
         }
-        if (nom.equals("Cavalier_Noir_1")) {
+        if (classe.equalsIgnoreCase("Cavalier")) {
             if (((dx == x + 2) || (dx == x - 2)) && ((dy == y + 1) || (dy == y - 1))) {
                 return true;
             }
@@ -161,6 +164,8 @@ public class PlateauDeJeu {
             }
             return false;
         }
+        return false;
+    }
 
     public void setId(String value) {
         this.id = value;

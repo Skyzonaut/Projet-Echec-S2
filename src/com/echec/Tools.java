@@ -1,11 +1,27 @@
 package com.echec;
 
+import com.echec.game.Case;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Tools {
     private static final int CONSTANT = 5;
+    public static final HashMap<Integer, String> notationEchecMapLignes = new HashMap<>();
+    public static final HashMap<Integer, String> notationEchecMapTypesPions = new HashMap<>();
+    static {
+        notationEchecMapLignes.put(1, "A");
+        notationEchecMapLignes.put(2, "B");
+        notationEchecMapLignes.put(3, "C");
+        notationEchecMapLignes.put(4, "D");
+        notationEchecMapLignes.put(5, "E");
+        notationEchecMapLignes.put(6, "F");
+        notationEchecMapLignes.put(7, "G");
+        notationEchecMapLignes.put(8, "A");
+    }
 
     private Tools() {
         throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
@@ -38,5 +54,39 @@ public class Tools {
         DateTimeFormatter formatDateEtHeure = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
         String dateEtHeureString = formatDateEtHeure.format(dateEtHeure);
         return dateEtHeureString;
+    }
+
+    public static String dateDateTimeMagnify(LocalDateTime e) {
+        DateTimeFormatter formatDateEtHeure = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        String dateEtHeureString = formatDateEtHeure.format(e);
+        return dateEtHeureString;
+    }
+
+    public static String coordToChessNotation(Case c) {
+        String str = "";
+        str += String.valueOf(notationEchecMapLignes.get(c.x));
+        str += String.valueOf(c.y);
+        return str;
+    }
+
+    public static String toNotationEchec(Case origine, Case destination) {
+        String str = "";
+        str += String.format("%s%s (%s) | [%d %d] -> [%d %d]",
+                coordToChessNotation(origine), coordToChessNotation(destination),
+                origine.x, origine.y, destination.x, destination.y);
+        return str;
+    }
+
+    public static String deplacementToNotationEchec(Case origine, Case destination) {
+        String str = origine.piece.utfString() + coordToChessNotation(origine);
+        str += coordToChessNotation(destination);
+        return str;
+    }
+
+    public static String priseToNotationEchec(Case origine, Case destination) {
+        String str = origine.piece.utfString() + coordToChessNotation(origine);
+        str += "x";
+        str += destination.piece.utfString() + coordToChessNotation(destination);
+        return str;
     }
 }

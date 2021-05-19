@@ -51,13 +51,12 @@ public abstract class Piece {
 
     public String getClassePiece() {
         String[] listePathClassePiece = this.getClass().getName().split("\\.");
-        return listePathClassePiece[listePathClassePiece.length -1];
+        return listePathClassePiece[listePathClassePiece.length-1];
     }
 
     public abstract ArrayList<Case> getDeplacement(String mode);
 
     public JSONObject getJSONObject() {
-        String str = "";
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("id", this.id);
         jsonObject.put("couleur", this.couleur);
