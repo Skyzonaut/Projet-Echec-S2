@@ -1,10 +1,7 @@
 package com.echec.game;
 
 import com.echec.pieces.*;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-
-import java.util.Locale;
 
 public class Case {
 
@@ -63,7 +60,7 @@ public class Case {
     }
 
     public boolean estVide() {
-        return this.piece == null ? true : false;
+        return this.piece == null;
     }
     public String toString() {
         return String.format("[%d, %d] | Couleur : %-5s | %s",
