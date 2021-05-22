@@ -13,7 +13,7 @@ public class Grille {
 
     private String id;
 
-    private ArrayList<Case> grilleCases = new ArrayList<Case>();
+    private ArrayList<Case> grilleCases = new ArrayList<>();
 
 
     public Grille() {
@@ -92,9 +92,18 @@ public class Grille {
         } return null;
     }
 
+    public Case getCase(Case c) {
+        for (Case uneCase : this.grilleCases) {
+            if (c.equals(uneCase)) {
+                return uneCase;
+            }
+        }
+        return null;
+    }
+
     public void printGrilleInfo() {
         for (int colonne = 1; colonne <= 8; colonne ++) {
-            System.out.println(String.format("[Colonne: %d]", colonne));
+            System.out.printf("[Colonne: %d]%n", colonne);
             for (int ligne = 1; ligne <= 8; ligne++) {
                 System.out.println(this.getCase(ligne, colonne));
             }
@@ -102,14 +111,14 @@ public class Grille {
     }
 
     public String toString() {
-        String str = "";
+        StringBuilder str = new StringBuilder();
         for (int colonne = 1; colonne <= 8; colonne ++) {
-            str += String.format("[Colonne: %d]", colonne) + "\n";
+            str.append(String.format("[Colonne: %d]", colonne)).append("\n");
             for (int ligne = 1; ligne <= 8; ligne++) {
-                str += this.getCase(ligne, colonne) + "\n";
+                str.append(this.getCase(ligne, colonne)).append("\n");
             }
         }
-        return str;
+        return str.toString();
     }
 
     public JSONObject getJSONObject() {
@@ -126,8 +135,7 @@ public class Grille {
     public String getFormatDate() {
         LocalDateTime dateEtHeure = LocalDateTime.now();
         DateTimeFormatter formatDateEtHeure = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
-        String dateEtHeureString = formatDateEtHeure.format(dateEtHeure);
-        return dateEtHeureString;
+        return formatDateEtHeure.format(dateEtHeure);
     }
 
 
