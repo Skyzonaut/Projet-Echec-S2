@@ -1,6 +1,7 @@
 package com.echec.game;
 
 import com.echec.Tools;
+import com.echec.pieces.Piece;
 import org.json.simple.JSONObject;
 
 import java.time.LocalDateTime;
@@ -11,26 +12,51 @@ public class Evenement {
     private LocalDateTime dateEtHeure;
     private String contenu;
     private String type;
-
+    private Case caseOrigine;
+    private Case caseDestination;
+    private Piece pieceOrigine;
+    private Piece pieceDestination;
 
     /**
      * @param id Identifiant de l'event
      * @param type Type de l'évènement
-     *             <ul><li>Création</li><li>Déplacement</li><li>Prise</li></ul>
-     * @param contenu Contenu de l'évènement
+     * <ul><li>Création</li><li>Déplacement</li><li>Prise</li></ul>
+     * @param origine Case originelle qui permettra de récupérer la position et la pièce
+     * @param destination Case de destintation qui permettra de récupérer la position et la pièce
      */
-    public Evenement(String id, String type, String contenu) {
+    public Evenement(String id, String type, Case origine, Case destination) {
         this.id = id;
         this.dateEtHeure = LocalDateTime.now();
-        this.contenu = contenu;
         this.type = type;
+        this.caseOrigine = origine;
+        if (caseOrigine != null) this.pieceOrigine = caseOrigine.piece;
+        else this.pieceOrigine = null;
+        
+        if (type.equalsIgnoreCase("déplacement"))  {
+            this.caseDestination = destination;
+            this.contenu = Tools.deplacementToNotationEchec(origine, destination);
+        }
+        if (type.equalsIgnoreCase("prise")) {
+            this.caseDestination = destination;
+            this.pieceDestination = destination.piece;
+            this.contenu = Tools.priseToNotationEchec(origine, destination);
+        }
+        if (type.equalsIgnoreCase("undo")) {
+            this.caseDestination = destination;
+            this.contenu = Tools.deplacementToNotationEchec(origine, destination);
+        }
     }
+
 
     public Evenement(Evenement e) {
         this.id = e.getId();
         this.dateEtHeure = e.getDateEtHeure();
         this.contenu = e.getContenu();
         this.type = e.getType();
+        this.caseOrigine = e.getCaseOrigine();
+        this.pieceOrigine = e.getPieceOrigine();
+        this.caseDestination = e.getCaseDestination();
+        this.pieceDestination = e.getPieceDestination();
     }
 
     public Evenement(JSONObject jsonObject) {
@@ -72,10 +98,45 @@ public class Evenement {
         return contenu;
     }
 
+    public Case getCaseOrigine() {
+        return caseOrigine;
+    }
+
+    public void setCaseOrigine(Case caseOrigine) {
+        this.caseOrigine = caseOrigine;
+    }
+
+    public Case getCaseDestination() {
+        return caseDestination;
+    }
+
+    public void setCaseDestination(Case caseDestination) {
+        this.caseDestination = caseDestination;
+    }
+
+    public Piece getPieceOrigine() {
+        return pieceOrigine;
+    }
+
+    public void setPieceOrigine(Piece pieceOrigine) {
+        this.pieceOrigine = pieceOrigine;
+    }
+
+    public Piece getPieceDestination() {
+        return pieceDestination;
+    }
+
+    public void setPieceDestination(Piece pieceDestination) {
+        this.pieceDestination = pieceDestination;
+    }
+
     public String toString() {
         String str = "@[%s]";
-        return String.format("%-15s : %-13s | %-8s | %s",
-                this.id, this.type, Tools.dateDateTimeMagnify(this.dateEtHeure), this.contenu);
+        return String.format("%-15s : %-13s | %-8s | %-4s | %-4s | %s",
+                this.id, this.type, Tools.dateDateTimeMagnify(this.dateEtHeure),
+                caseOrigine != null ? this.caseOrigine.x + " " + this.caseOrigine.y : "",
+                caseDestination != null ? this.caseDestination.x + " " + this.caseDestination.y : "",
+                this.contenu);
     }
 
     public JSONObject getJSONObject() {

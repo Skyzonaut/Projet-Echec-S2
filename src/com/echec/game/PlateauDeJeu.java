@@ -93,26 +93,33 @@ public class PlateauDeJeu {
         this.grille.initialiserGrille();
     }
 
-    public void deplacerPiece(Case origine, Case destination) {
-        deplacerPiece(origine, destination, true);
+    public String deplacerPiece(Case origine, Case destination) {
+        return deplacerPiece(origine, destination, true);
     }
 
-    public void deplacerPiece(Case origine, Case destination, boolean updateHistorique) {
-        if (destination.estVide()) {
-            destination.piece = origine.piece;
-            if (updateHistorique) {
-                this.historique.addEvenement("Déplacement", Tools.deplacementToNotationEchec(origine, destination));
+    public String deplacerPiece(Case origine, Case destination, boolean updateHistorique) {
+        if (!origine.estVide()) {
+            if (destination.estVide()) {
+                destination.piece = origine.piece;
+                if (updateHistorique) {
+                    this.historique.addEvenement("Déplacement", origine, destination);
+                }
+                origine.vider();
+                return "ok";
+            } else {
+                System.out.println("La destination n'est pas vide, veuillez utiliser la commande [prendre]");
+                return "nok";
             }
-            origine.vider();
         } else {
-            System.out.println("La destination n'est pas vide, veuillez utiliser la commande [prendre]");
+            System.out.println("L'origine est vide!");
+            return "nok";
         }
     }
 
     public void prendrePiece(Case origine, Case destination) {
         if (!destination.estVide()) {
             destination.piece.setEtat(false);
-            this.historique.addEvenement("Prise", Tools.priseToNotationEchec(origine, destination));
+            this.historique.addEvenement("Prise", origine, destination);
             destination.vider();
             deplacerPiece(origine, destination, false);
         } else {
