@@ -5,12 +5,12 @@ import com.echec.game.Case;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Tools {
     private static final int CONSTANT = 5;
     public static final HashMap<Integer, String> notationEchecMapLignes = new HashMap<>();
-    public static final HashMap<Integer, String> notationEchecMapTypesPions = new HashMap<>();
     static {
         notationEchecMapLignes.put(1, "A");
         notationEchecMapLignes.put(2, "B");
@@ -19,7 +19,7 @@ public class Tools {
         notationEchecMapLignes.put(5, "E");
         notationEchecMapLignes.put(6, "F");
         notationEchecMapLignes.put(7, "G");
-        notationEchecMapLignes.put(8, "A");
+        notationEchecMapLignes.put(8, "H");
     }
 
     private Tools() {
@@ -76,14 +76,6 @@ public class Tools {
         return str;
     }
 
-    public static String toNotationEchec(Case origine, Case destination) {
-        String str = "";
-        str += String.format("%s%s | [%d %d] -> [%d %d]",
-                coordToChessNotation(origine), coordToChessNotation(destination),
-                origine.x, origine.y, destination.x, destination.y);
-        return str;
-    }
-
     public static String deplacementToNotationEchec(Case origine, Case destination) {
         String str = origine.piece.utfString() + coordToChessNotation(origine);
         str += coordToChessNotation(destination);
@@ -95,5 +87,42 @@ public class Tools {
         str += "x";
         str += destination.piece.utfString() + coordToChessNotation(destination);
         return str;
+    }
+
+    public static String getCoordonneeBonFormat(Scanner scanner) {
+        String coord = scanner.nextLine();
+        String[] coordSplit = coord.split("");
+        while (!coord.matches("^\\d \\d$|^\\d\\d$") && !coord.matches("|^[a-gA-g] \\d$|^[a-gA-G]\\d$")) {
+            System.out.println("Le format est [x y] ou [xy] ou [a y] ou [ay]");
+            coord = scanner.nextLine();
+        }
+        if (coordSplit[0].matches("\\d")) {
+            return coord;
+        } else if (coordSplit[0].matches("[a-gA-G]")) {
+            for (Map.Entry<Integer, String> entry : notationEchecMapLignes.entrySet()) {
+                if (entry.getValue().equalsIgnoreCase(coordSplit[0])) {
+                    return entry.getKey().toString() + coordSplit[coordSplit.length-1];
+                }
+            }
+        }
+        return coord;
+    }
+
+    public static String getNomFichierSauvegarde() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("[Rentrez le nom de sauvegarde, ne rentrez rien pour une génération automatique]");
+        String input = scanner.nextLine();
+        if (!input.trim().equals("")) {
+            while (input.matches("[^a-zA-Z0-9_-]")) {
+                System.out.println("Le nom ne doit pas contenir les caractères suivants : ? < > : \" / \\ | ? *");
+                input = scanner.nextLine();
+            } return input + ".json";
+        } else {
+            return Tools.getFormatDate() + ".json";
+        }
+    }
+
+    public static String getLettreColonne(int colonne) {
+        return notationEchecMapLignes.get(colonne);
     }
 }
