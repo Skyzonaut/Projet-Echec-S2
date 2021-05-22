@@ -34,59 +34,87 @@ public class PlateauDeJeu {
 
     public String toString(int hauteur, int largeur) {
 
-        StringBuilder dessinPlateau = new StringBuilder("-");
+        StringBuilder dessinPlateau = new StringBuilder(" ");
 
-        for (int i = 0; i < 8 + 1; i++) {
-            dessinPlateau.append("-".repeat(Math.max(0, largeur)));
+        for (int colonne = 1; colonne <= 8; colonne++)
+        {
+            for (int j = 0; j < largeur ; j++)
+            {
+                if (j == (largeur / 2))
+                {
+                    dessinPlateau.append(Tools.getLettreColonne(colonne) + " ");
+                }
+                else
+                {
+                    dessinPlateau.append(" ");
+                }
+            }
+        }
+
+        dessinPlateau.append("\n-");
+
+        for (int i = 0; i < 8 + 1; i++)
+        {
+            dessinPlateau.append("-".repeat(largeur));
             dessinPlateau.append("-");
-        } dessinPlateau.append("\n");
+        }
+        dessinPlateau.append("\n");
 
-        int ligneCompte = 1;
+        int ligneCompte = 8;
 
-        for (int ligne = 1; ligne < hauteur * 8; ligne++) {
-
+        for (int ligne = 1; ligne < hauteur * 8; ligne++)
+        {
             String contenu = " ";
             dessinPlateau.append("|");
 
-            for (int colonne = 1; colonne <= 8; colonne++) {
-                if (this.grille.getCase(colonne, ligneCompte).piece != null) {
+            for (int colonne = 1; colonne <= 8; colonne++)
+            {
+                if (this.grille.getCase(colonne, ligneCompte).piece != null)
+                {
                     contenu = this.grille.getCase(colonne, ligneCompte).piece.utfString();
                 }
 
-                for (int j = 0; j < largeur ; j++) {
-                    if (j == (largeur / 2)) {
-                        if (!contenu.equals(" ")) {
+                for (int j = 0; j < largeur ; j++)
+                {
+                    if (j == (largeur / 2))
+                    {
+                        if (!contenu.equals(" "))
+                        {
                             dessinPlateau.append(ligne % hauteur == 0 ? " " : contenu);
-                        } else {
+                        }
+                        else
+                        {
                             dessinPlateau.append(" ");
                         }
-                    } else {
+                    }
+                    else
+                    {
                         dessinPlateau.append(ligne % hauteur == 0 ? "-" : " ");
                     }
                 }
-
                 contenu = " ";
-
                 dessinPlateau.append(ligne % hauteur == 0 ? "+" : "|");
-            } dessinPlateau.append("\n");
 
-            if (ligne % hauteur == 0)  ligneCompte ++;
+            }
+            dessinPlateau.append(ligne % hauteur == 0 ? " " : " " + ligneCompte);
+            dessinPlateau.append("\n");
+
+            if (ligne % hauteur == 0)  ligneCompte --;
         }
-
         dessinPlateau.append("-");
-        for (int i = 0; i < 8 + 1; i++) {
+
+        for (int i = 0; i < 8 + 1; i++)
+        {
             dessinPlateau.append("-".repeat(Math.max(0, largeur)));
             dessinPlateau.append("-");
-        } dessinPlateau.append("\n");
+        }
+        dessinPlateau.append("\n");
 
         return dessinPlateau.toString();
     }
 
     public Grille getGrille() {
         return this.grille;
-    }
-
-    public void update() {
     }
 
     public void initPlateau() {
