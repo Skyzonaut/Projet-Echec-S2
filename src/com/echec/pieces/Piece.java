@@ -53,7 +53,7 @@ public abstract class Piece {
 
     /**
      * Getter retournant l'id de la pièce
-     * @return Piece#id
+     * @return {@linkplain Piece#id}
      * @author yohan
      */
     public String getId() {
@@ -61,18 +61,18 @@ public abstract class Piece {
     }
 
     /**
-     * Setter retournant l'id de la pièce
+     * Setter modifiant l'id de la pièce
      * @param value String : Nouvel id
      * @see Piece#id
      * @author yohan
      */
-    void setId(String value) {
+    public void setId(String value) {
         this.id = value;
     }
 
     /**
      * Getter retournant la couleur de la pièce
-     * @return Piece#couleur
+     * @return {@linkplain Piece#couleur}
      * @author yohan
      */
     public String getCouleur() {
@@ -80,7 +80,7 @@ public abstract class Piece {
     }
 
     /**
-     * Setter retournant la couleur de la pièce
+     * Setter modifiant la couleur de la pièce
      * @param value String : Nouvelle couleur
      * @see Piece#couleur
      * @author yohan
@@ -91,7 +91,7 @@ public abstract class Piece {
 
     /**
      * Getter retournant l'état' de la pièce
-     * @return Piece#etat
+     * @return {@linkplain Piece#etat}
      * @author yohan
      */
     public boolean isEtat() {
@@ -99,7 +99,7 @@ public abstract class Piece {
     }
 
     /**
-     * Setter retournant l'état de la pièce
+     * Setter modifiant l'état de la pièce
      * @param value String : Nouvel état
      * @see Piece#etat
      * @author yohan
@@ -173,9 +173,9 @@ public abstract class Piece {
 
     /**
      * Fonction permettant de sauvegarder les attributs de la pièce dans un objet JSON, qui sera ensuite
-     * intégré dans un JSON avec toutes les autres pièces, et informations sur le Jeu. Qui servira de fichier de
+     * intégrée dans un JSON avec toutes les autres pièces, et informations sur le Jeu. Qui servira de fichier de
      * sauvegarde au jeu.
-     * @return JSONObject : La pièce sous format JSON
+     * @return <code>JSONObject</code> : La pièce sous format JSON
      * @see Grille#getJSONObject()
      * @author yohan
      */

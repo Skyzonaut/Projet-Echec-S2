@@ -68,7 +68,7 @@ public class Case {
     }
 
     /**
-     * Constructeur par recopie d'une case en copiant une case déjà sauvegardé dans un objet json
+     * Constructeur par recopie d'une case en copiant une case déjà sauvegardée dans un objet json
      * @param jsonObject <code>JSONObject</code> : Sauvegarde d'une case au format Json
      * @see Piece
      * @see Grille#getJSONObject()
@@ -148,7 +148,7 @@ public class Case {
      * Fonction permettant de sauvegarder les attributs de la case dans un objet JSON, qui sera ensuite
      * intégré dans un JSON avec toutes les autres pièces, et informations sur le Jeu. Qui servira de fichier de
      * sauvegarde au jeu.
-     * @return JSONObject : La case sous format JSON
+     * @return <code>JSONObject</code> : La case sous format JSON
      * @see Grille#getJSONObject()
      * @author yohan
      */
