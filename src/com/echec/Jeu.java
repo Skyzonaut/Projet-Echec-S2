@@ -11,19 +11,18 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Jeu {
 
     public PlateauDeJeu plateau;
-    public static final String[] arrayDesCommandes = {"deplacer", "prendre", "save", "charger", "undo", "quitter", "abandonner", "help"};
-    public static final String[] arrayDesCommandesRaccourci = {"d", "p", "s", "c", "u", "q", "a", "h"};
+    public static final String[] arrayDesCommandes = {"deplacer", "prendre", "save", "charger", "undo", "quitter", "abandonner", "help", "historique"};
+    public static final String[] arrayDesCommandesRaccourci = {"d", "p", "s", "c", "u", "q", "a", "h", "n"};
     public static final List<String> listeDesCommandes = Arrays.asList(arrayDesCommandes);
     public static final List<String> listeDesCommandesRaccourci = Arrays.asList(arrayDesCommandesRaccourci);
     private String tour;
     private int niveauDeDifficulte;
     private static FileWriter fw;
+    private Boolean jeuEnCours = true;
 
 
     public Jeu() {
@@ -35,13 +34,10 @@ public class Jeu {
 
     public static void main(String[] args) {
         Jeu jeu = new Jeu();
-        jeu.plateau.afficher();
         jeu.jouer();
     }
 
     public void jouer() {
-
-        boolean jeuEnCours = true;
 
         while (jeuEnCours) {
 
@@ -102,6 +98,10 @@ public class Jeu {
                         case "h" :
                             this.help();
 
+                        case "historique" :
+                        case "n" :
+                            this.plateau.historique.afficher();
+
                         default:
                             System.out.println("Commande non reconnu");
                     }
@@ -118,14 +118,14 @@ public class Jeu {
         Case origine = this.getCaseOrigineDepuisCoordonneeInput();
         Case destination = this.getCaseDestinationDepuisCoordonneeInput();
         this.plateau.prendrePiece(origine, destination);
-        this.tour = (this.tour == "blanc") ? "noir" : "blanc";
+        this.tour = (this.tour.equals("blanc")) ? "noir" : "blanc";
     }
 
     public void deplacerPiece() {
         Case origine = this.getCaseOrigineDepuisCoordonneeInput();
         Case destination = this.getCaseDestinationDepuisCoordonneeInput();
         String retour = this.plateau.deplacerPiece(origine, destination);
-        if (retour.equals("ok")) this.tour = (this.tour == "blanc") ? "noir" : "blanc";
+        if (retour.equals("ok")) this.tour = (this.tour.equals("blanc")) ? "noir" : "blanc";
     }
 
     public void undo() {
@@ -146,11 +146,11 @@ public class Jeu {
             this.plateau.deplacerPiece(destination, origine, false);
             this.plateau.getGrille().getCase(destination).ajouterPiece(pieceDestination);
         }
-        this.tour = (this.tour == "blanc") ? "noir" : "blanc";
+        this.tour = (this.tour.equals("blanc")) ? "noir" : "blanc";
     }
 
     public String save() {
-        String dossierSauvegardeChemin = "./save/";
+        String dossierSauvegardeChemin = "../save/";
         File repertoire = new File(dossierSauvegardeChemin);
         JSONObject jsonObject = this.plateau.getJSONObject();
         jsonObject.put("tour", this.tour);
@@ -185,8 +185,8 @@ public class Jeu {
             System.out.println(this.save() + "\n");
         }
 
-        String stringRetour = "";
-        String dossierSauvegardeChemin = "./save/";
+        String stringRetour;
+        String dossierSauvegardeChemin = "../save/";
         File repertoire = new File(dossierSauvegardeChemin);
 
         // On affiche la liste des sauvegardes pour sélection
@@ -221,7 +221,7 @@ public class Jeu {
             } else {
                 stringRetour = "Aucune sauvegarde n'a été trouvée";
             }
-        } else { stringRetour = "Dossier de sauvegardé non trouvé"; }
+        } else { stringRetour = "Dossier de sauvegarde non trouvé"; }
         stringRetour = "Partie chargée";
         return stringRetour;
     }
@@ -248,7 +248,7 @@ public class Jeu {
 
     public void quitterJeu() {
         System.out.println("[Voulez vous sauvegarder votre partie ?]");
-         if (Tools.getOuiNon().equalsIgnoreCase("oui")) this.save();
+        if (Tools.getOuiNon().equalsIgnoreCase("oui")) this.save();
         System.exit(0);
     }
 
@@ -308,6 +308,10 @@ public class Jeu {
         System.out.println("[Abandonner] " + "-".repeat(37) +
                 "| Entrez : undo ou u\n" +
                 "| Commande permettant d'afficher les indications sur les commandes disponibles\n");
+
+        System.out.println("[Historique] " + "-".repeat(37) +
+                "| Entrez : historique ou n\n" +
+                "| Commande permettant d'afficher l'historique des coups et undo\n");
     }
     public String getCommandeInput() {
         printListeCommande();
