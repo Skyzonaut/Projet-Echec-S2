@@ -48,6 +48,8 @@ public class Jeu {
 
             while (partieEnCours) {
 
+                this.plateau.afficher();
+
                 System.out.format("> C'est au tour des %ss\n\n", this.tour);
 
                 String commande = this.getCommandeInput().trim();
@@ -108,7 +110,6 @@ public class Jeu {
                 } else {
                     System.out.println("Commande incompréhensible");
                 }
-                this.plateau.afficher();
 //                this.plateau.historique.afficher();
             }
         }
