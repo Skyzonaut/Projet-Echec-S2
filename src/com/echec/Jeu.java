@@ -1,6 +1,7 @@
 package com.echec;
 
 import com.echec.game.*;
+import com.echec.pieces.Piece;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -9,95 +10,153 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 
 public class Jeu {
 
-    PlateauDeJeu plateau;
-    public static final String[] arrayDesCommandes = {"deplacer", "prendre", "save", "charger"};
+    public PlateauDeJeu plateau;
+    public static final String[] arrayDesCommandes = {"deplacer", "prendre", "save", "charger", "undo", "quitter", "abandonner", "help", "historique"};
+    public static final String[] arrayDesCommandesRaccourci = {"d", "p", "s", "c", "u", "q", "a", "h", "n"};
     public static final List<String> listeDesCommandes = Arrays.asList(arrayDesCommandes);
+    public static final List<String> listeDesCommandesRaccourci = Arrays.asList(arrayDesCommandesRaccourci);
     private String tour;
+    private int niveauDeDifficulte;
     private static FileWriter fw;
+    private Boolean jeuEnCours = true;
 
 
     public Jeu() {
         this.plateau = new PlateauDeJeu();
     }
 
-    public PlateauDeJeu jouer() {
-        return plateau;
-    }
-
     public void updateHistorique() {
     }
 
-    public void chargerJeu() {
-    }
-
-
-    public static void main(String[] args)
-
-    {
+    public static void main(String[] args) {
         Jeu jeu = new Jeu();
         jeu.jouer();
-        jeu.plateau.afficher();
+    }
 
-        boolean jeuEnCours = true;
+    public void jouer() {
 
-        while (jeuEnCours)
-        {
+        while (jeuEnCours) {
 
-            String commande = jeu.getCommandeInput().trim();
+            this.tour = "blanc";
+            int[] listeParam = lancerPartie();
+            niveauDeDifficulte = listeParam[0];
+            boolean partieEnCours = true;
 
-            if (listeDesCommandes.contains(commande))
-            {
+            while (partieEnCours) {
 
-                switch (commande)
-                {
-                    case "prendre" : jeu.prendrePiece();
-                        break;
-                    case "deplacer" : jeu.deplacerPiece();
-                        break;
-                    case "save" : System.out.println(jeu.save());
-                        break;
-                    case "charger" : System.out.println(jeu.charger());
-                    break;
-                    default: System.out.println("Commande non reconnu");
+                System.out.format("> C'est au tour des %ss\n\n", this.tour);
+
+                String commande = this.getCommandeInput().trim();
+
+                if (listeDesCommandes.contains(commande) || listeDesCommandesRaccourci.contains(commande)) {
+
+                    switch (commande) {
+                        case "prendre":
+                        case "p":
+                            this.prendrePiece();
+                            break;
+
+                        case "deplacer":
+                        case "d":
+                            this.deplacerPiece();
+                            break;
+
+                        case "save":
+                        case "s":
+                            System.out.println(this.save());
+                            break;
+
+                        case "charger":
+                        case "c":
+                            System.out.println(this.charger());
+                            break;
+
+                        case "undo":
+                        case "u":
+                            if (niveauDeDifficulte == 2) {
+                                this.undo();
+                            } else {
+                                System.out.println("Vous ne pouvez pas revenir en arrière dans ce niveau de difficulté!");
+                            }
+                            break;
+
+                        case "quitter" :
+                        case "q" :
+                            this.quitterJeu();
+                            break;
+
+                        case "abandonner" :
+                        case "a" :
+                            partieEnCours = this.finirPartie();
+                            break;
+
+                        case "help" :
+                        case "h" :
+                            this.help();
+
+                        case "historique" :
+                        case "n" :
+                            this.plateau.historique.afficher();
+
+                        default:
+                            System.out.println("Commande non reconnu");
+                    }
+                } else {
+                    System.out.println("Commande incompréhensible");
                 }
-
+                this.plateau.afficher();
+//                this.plateau.historique.afficher();
             }
-            else
-            {
-                System.out.println("Commande incompréhensible");
-            }
-            jeu.plateau.afficher();
         }
     }
 
     public void prendrePiece() {
-
-        Case origine = this.getCaseDepuisCoordonneeInput();
-        Case destination = this.getCaseDepuisCoordonneeInput();
-        plateau.prendrePiece(origine, destination);
+        Case origine = this.getCaseOrigineDepuisCoordonneeInput();
+        Case destination = this.getCaseDestinationDepuisCoordonneeInput();
+        this.plateau.prendrePiece(origine, destination);
+        this.tour = (this.tour.equals("blanc")) ? "noir" : "blanc";
     }
 
     public void deplacerPiece() {
+        Case origine = this.getCaseOrigineDepuisCoordonneeInput();
+        Case destination = this.getCaseDestinationDepuisCoordonneeInput();
+        String retour = this.plateau.deplacerPiece(origine, destination);
+        if (retour.equals("ok")) this.tour = (this.tour.equals("blanc")) ? "noir" : "blanc";
+    }
 
-        Case origine = this.getCaseDepuisCoordonneeInput();
-        Case destination = this.getCaseDepuisCoordonneeInput();
-        plateau.deplacerPiece(origine, destination);
+    public void undo() {
+        System.out.println("undo done");
+        Evenement dernierEvenement = this.plateau.historique.getDernierEvenement("undo");
+        Case origine = dernierEvenement.getCaseOrigine();
+        Piece pieceOrigine = dernierEvenement.getPieceOrigine();
+        Case destination = dernierEvenement.getCaseDestination();
+        String typeEvenement = dernierEvenement.getType();
+
+        this.plateau.historique.addEvenement("Undo", destination, origine);
+
+        if (typeEvenement.equalsIgnoreCase("déplacement")) {
+            this.plateau.deplacerPiece(destination, origine, false);
+        }
+        else if (typeEvenement.equalsIgnoreCase("Prise")) {
+            Piece pieceDestination = dernierEvenement.getPieceDestination();
+            this.plateau.deplacerPiece(destination, origine, false);
+            this.plateau.getGrille().getCase(destination).ajouterPiece(pieceDestination);
+        }
+        this.tour = (this.tour.equals("blanc")) ? "noir" : "blanc";
     }
 
     public String save() {
-        String dossierSauvegardeChemin = "./save/";
+        String dossierSauvegardeChemin = "../save/";
         File repertoire = new File(dossierSauvegardeChemin);
         JSONObject jsonObject = this.plateau.getJSONObject();
+        jsonObject.put("tour", this.tour);
+        jsonObject.put("difficulte", this.niveauDeDifficulte);
 
-        String nouveauFichierChemin = dossierSauvegardeChemin + Tools.getFormatDate() + ".json";
+        String nouveauFichierChemin = dossierSauvegardeChemin + Tools.getNomFichierSauvegarde();
 
         if (repertoire.isDirectory()) {
             try {
@@ -118,6 +177,7 @@ public class Jeu {
     }
 
     public String charger() {
+
         // On demande si l'utilisateur veut sauvegarder sa partie avant
         System.out.println("Vous allez écraser votre partie - Voulez vous la sauvegarder ?");
         String ouiNon = Tools.getOuiNon();
@@ -125,8 +185,8 @@ public class Jeu {
             System.out.println(this.save() + "\n");
         }
 
-        String stringRetour = "";
-        String dossierSauvegardeChemin = "./save/";
+        String stringRetour;
+        String dossierSauvegardeChemin = "../save/";
         File repertoire = new File(dossierSauvegardeChemin);
 
         // On affiche la liste des sauvegardes pour sélection
@@ -134,10 +194,11 @@ public class Jeu {
 
         if (repertoire.isDirectory()) {
             File[] listeFiles = repertoire.listFiles();
+            Arrays.sort(listeFiles, Comparator.comparingLong(File::lastModified));
             if (listeFiles.length != 0) {
                 int indexFile = 0;
                 for (File file : listeFiles) {
-                    System.out.println(indexFile + " - " + parseSaveName(file.getName()));
+                    System.out.println(indexFile + " - " + getSaveFileName(file.getName()));
                     indexFile++;
                 }
 
@@ -149,6 +210,10 @@ public class Jeu {
                 // On charge le fichier sélectionné et on le transforme en json
                 try {
                     Object obj = new JSONParser().parse(new FileReader(listeFiles[sauvegardeChoisie]));
+                    JSONObject jsonObject = (JSONObject) obj;
+                    this.tour = (String) jsonObject.get("tour");
+                    this.niveauDeDifficulte = ((Long) jsonObject.get("difficulte")).intValue();
+
                     this.plateau = new PlateauDeJeu((JSONObject) obj);
                 } catch (ParseException | IOException e) {
                     e.printStackTrace();
@@ -156,13 +221,100 @@ public class Jeu {
             } else {
                 stringRetour = "Aucune sauvegarde n'a été trouvée";
             }
-        } else { stringRetour = "Dossier de sauvegardé non trouvé"; }
+        } else { stringRetour = "Dossier de sauvegarde non trouvé"; }
         stringRetour = "Partie chargée";
         return stringRetour;
     }
 
-    public String getCommandeInput() {
+    public int[] lancerPartie(){
+        int[] listeParam = new int[3];
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Pour démarrer une partie tapez : [jouer]\nPuis sélectionner le niveau de difficulté");
+        System.out.println("\n1 - Normal : Règles standards\n2 - Apprenti : Possibilité de retour en arrière");
+        listeParam[0] = scanner.nextInt();
+        while (listeParam[0] > 2 ||  listeParam[0] < 1) {
+            System.out.println("Choisissez une difficult disponible!");
+            listeParam[0] = scanner.nextInt();
+        }
+        System.out.println("-------- Début de la partie --------");
+        return listeParam;
+    }
 
+    public Boolean finirPartie() {
+        System.out.println("[Voulez vous sauvegarder votre partie ?]");
+        if (Tools.getOuiNon().equalsIgnoreCase("oui")) this.save();
+        return false;
+    }
+
+    public void quitterJeu() {
+        System.out.println("[Voulez vous sauvegarder votre partie ?]");
+        if (Tools.getOuiNon().equalsIgnoreCase("oui")) this.save();
+        System.exit(0);
+    }
+
+    public void help() {
+        System.out.println("[Déplacer] " + "-".repeat(40) +
+                "| Entrez : deplacer ou d\n" +
+                "| Commande permettant de déplacer une pièce sur l'échiquier\n" +
+                "| Premier entrée  : Coordonnées de la case contenant le pion que vous souhaitez déplacer" +
+                "\n|\t\t Entrez au format numérique : [xy] ou [x y]; Exemple : a5 ou g 7" +
+                "\n|\t\t Entrez au format échec     : [ay] ou [x y]; Exemple : a5 ou g 7\n" +
+                "| Deuxième entrée : Coordonnées de la case où vous souhaitez déplacer votre pion" +
+                "\n|\t\t Entrez au format numérique : [xy] ou [x y]; Exemple : a5 ou g 7" +
+                "\n|\t\t Entrez au format échec     : [ay] ou [x y]; Exemple : a5 ou g 7\n");
+
+        System.out.println("[Prendre] " + "-".repeat(40) +
+                "| Entrez : prendre ou p\n" +
+                "| Commande permettant de prendre une pièce sur l'échiquier\n" +
+                "| Premier entrée : Coordonnées de la case contenant le pion que vous souhaitez déplacer" +
+                "\n|\t\t Entrez au format numérique : [xy] ou [x y]; Exemple : a5 ou g 7" +
+                "\n|\t\t Entrez au format échec     : [ay] ou [x y]; Exemple : a5 ou g 7\n" +
+                "| Premier entrée : Coordonnées de la case où vous souhaitez déplacer votre pion et y prendre le pion présent" +
+                "\n|\t\t Entrez au format numérique : [xy] ou [x y]; Exemple : a5 ou g 7" +
+                "\n|\t\t Entrez au format échec     : [ay] ou [x y]; Exemple : a5 ou g 7\n");
+
+        System.out.println("[Save] " + "-".repeat(43) +
+                "| Entrez : save ou s\n" +
+                "| Commande permettant de sauvegarder l'état actuel de votre partie dans un fichier de sauvegarde\n" +
+                "| pour pouvoir la recharger plus tard\n" +
+                "| Premier entrée : Indiquez le nom que vous souhaitez donner à votre sauvegarde\n" +
+                "| Par défaut (c'est à dire si vous ne renseignez aucun nom de sauvegarde)\n" +
+                "| la sauvergarde sera enregistré avec comme nom la date et heure au format : YYYYMMJJ-hhmmss\n");
+
+        System.out.println("[Charger] " + "-".repeat(40) +
+                "| Entrez : charger ou c\n" +
+                "| Commande permettant de charger une ancienne sauvegarde et d'y reprendre la partie sauvegardée\n" +
+                "| Premier entrée  : Indiquez si vous voulez sauvegarder votre partie actuelle" +
+                "\n|\t\t Entrez au format oui/non : [oui] ou [non]" +
+                "| Deuxième entrée : Sélectionnez la sauvegarde à charger\n");
+
+        System.out.println("[Undo] " + "-".repeat(43) +
+                "| Entrez : undo ou u\n" +
+                "| Commande permettant de revenir sur les coups précédents [UNIQUEMENT SI EN MODE APPRENTI]\n");
+
+        System.out.println("[Quitter] " + "-".repeat(41) +
+                "| Entrez : undo ou u\n" +
+                "| Commande permettant de quitter le jeu et d'éteindre le programme\n" +
+                "| Premier entrée  : Indiquez si vous voulez sauvegarder votre partie actuelle" +
+                "\n|\t\t Entrez au format oui/non : [oui] ou [non]\n");
+
+        System.out.println("[Abandonner] " + "-".repeat(37) +
+                "| Entrez : undo ou u\n" +
+                "| Commande permettant d'abandonner votre partie actuelle, et de revenir à l'écran de sélection\n" +
+                "| de niveau de difficulté de parties\n" +
+                "| Premier entrée  : Indiquez si vous voulez sauvegarder votre partie actuelle" +
+                "\n|\t\t Entrez au format oui/non : [oui] ou [non]\n");
+
+        System.out.println("[Abandonner] " + "-".repeat(37) +
+                "| Entrez : undo ou u\n" +
+                "| Commande permettant d'afficher les indications sur les commandes disponibles\n");
+
+        System.out.println("[Historique] " + "-".repeat(37) +
+                "| Entrez : historique ou n\n" +
+                "| Commande permettant d'afficher l'historique des coups et undo\n");
+    }
+    public String getCommandeInput() {
+        printListeCommande();
         Scanner inputCommandeScanner = new Scanner(System.in);
         String commande = inputCommandeScanner.nextLine();
         return commande;
@@ -170,35 +322,27 @@ public class Jeu {
 
     public void printListeCommande() {
         String strCommande = "[";
-        for (String commande : arrayDesCommandes) {strCommande += commande + "/";};
+        for (String commande : arrayDesCommandes) {strCommande += commande + "/";}
+        strCommande += "] ou leurs raccourcis : [";
+        for (String commande : arrayDesCommandesRaccourci) {strCommande += commande + "/";}
         System.out.println(strCommande + "]");
     }
 
-    public Case getCaseDepuisCoordonneeInput() {
-
+    public Case getCaseOrigineDepuisCoordonneeInput() {
         Scanner inputCoordDestinataireScanner = new Scanner(System.in);
-        System.out.println("Destination : [xy ou x y]");
-        String coordDestination = getCoordonneeBonFormat(inputCoordDestinataireScanner);
+        System.out.println("Origine : [xy ou x y] ou [ay ou a y]");
+        String coordDestination = Tools.getCoordonneeBonFormat(inputCoordDestinataireScanner);
         Case destination = convertirCaseDepuisInput(coordDestination, this.plateau.getGrille());
         return destination;
     }
 
-    public String getCoordonneeBonFormat(Scanner scanner) {
+    public Case getCaseDestinationDepuisCoordonneeInput() {
 
-        Pattern pattern = Pattern.compile("^\\d \\d$|^\\d\\d$");
-        Matcher matcher;
-
-        String coord = scanner.nextLine();
-        matcher = pattern.matcher(coord);
-
-        if (!matcher.find()) {
-            System.out.println("Le format est [x y] ou [xy]");
-            while (!matcher.find()) {
-                coord = scanner.nextLine();
-                matcher = pattern.matcher(coord);
-            }
-        }
-        return coord;
+        Scanner inputCoordDestinataireScanner = new Scanner(System.in);
+        System.out.println("Destination : [xy ou x y] ou [ay ou a y]");
+        String coordDestination = Tools.getCoordonneeBonFormat(inputCoordDestinataireScanner);
+        Case destination = convertirCaseDepuisInput(coordDestination, this.plateau.getGrille());
+        return destination;
     }
 
     public Case convertirCaseDepuisInput(String inputString, Grille grille) {
@@ -214,27 +358,29 @@ public class Jeu {
         return grille.getCase(x, y);
     }
 
-    public static String parseSaveName(String fileName) {
-        String parsedSaveName = "";
-        String[] fileNameArray = fileName.split("");
-        for (int a = 0; a < 4; a++) {
-            parsedSaveName += fileNameArray[a];
-        }  parsedSaveName += "/";
-        for (int m = 4; m < 6; m++) {
-            parsedSaveName += fileNameArray[m];
-        }  parsedSaveName += "/";
-        for (int j = 6; j < 8; j++) {
-            parsedSaveName += fileNameArray[j];
-        }  parsedSaveName += " ";
-        for (int h = 9; h < 11; h++) {
-            parsedSaveName += fileNameArray[h];
-        }  parsedSaveName += ":";
-        for (int m = 11; m < 13; m++) {
-            parsedSaveName += fileNameArray[m];
-        }  parsedSaveName += ":";
-        for (int s = 13; s < 15; s++) {
-            parsedSaveName += fileNameArray[s];
-        }  parsedSaveName += "";
-        return parsedSaveName;
+    public static String getSaveFileName(String fileName) {
+        if (fileName.matches("[0-9-]")) {
+            String parsedSaveName = "";
+            String[] fileNameArray = fileName.split("");
+            for (int a = 0; a < 4; a++) {
+                parsedSaveName += fileNameArray[a];
+            }  parsedSaveName += "/";
+            for (int m = 4; m < 6; m++) {
+                parsedSaveName += fileNameArray[m];
+            }  parsedSaveName += "/";
+            for (int j = 6; j < 8; j++) {
+                parsedSaveName += fileNameArray[j];
+            }  parsedSaveName += " ";
+            for (int h = 9; h < 11; h++) {
+                parsedSaveName += fileNameArray[h];
+            }  parsedSaveName += ":";
+            for (int m = 11; m < 13; m++) {
+                parsedSaveName += fileNameArray[m];
+            }  parsedSaveName += ":";
+            for (int s = 13; s < 15; s++) {
+                parsedSaveName += fileNameArray[s];
+            }  parsedSaveName += "";
+            return parsedSaveName;
+        } else return fileName;
     }
 }
