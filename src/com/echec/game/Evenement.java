@@ -6,23 +6,95 @@ import org.json.simple.JSONObject;
 
 import java.time.LocalDateTime;
 
+/**
+ * Classe représentant l'enregistrement d'un mouvement, coup ou une quelconque action liée au jeu
+ * <ul>
+ *     <li><code>Déplacement</code> : déplacement d'un pion</li>
+ *     <li><code>Prise</code> : prise d'un pion par un autre</li>
+ *     <li><code>Undo</code> : retour en arrière sur un coup (si le niveau de difficulté l'autorise</li>
+ *     <li><code>Création</code> : création de l'échiquier</li>
+ * </ul>
+ * Contient des informations sur l'évènement, qui permetteront de décrire le coup.
+ * <p>Sera intégré dans un historique qui les manipulera.
+ * @see Historique
+ * @author yohan
+ */
 public class Evenement {
 
+    /**
+     * Idenfitiant de l'évènement
+     */
     private String id;
+
+    /**
+     * Date et heure à laquelle l'évènement a été créé
+     */
     private LocalDateTime dateEtHeure;
+
+    /**
+     * Contenu de l'évènement, représentation textuelle de l'évènement, dans le cas d'un <br>
+     * <code>déplacement, prise</code> ou <code>undo</code> contient la représentation textuelle conventionnelle
+     * du coup.
+     * <p>
+     * <i>Voir :</i>
+     * <a href=" https://leconsdechecspourdebutants.com/notions_supplementaires/lecon-6-notation-algebrique-echecs.htm">Notation conventionnel des coups d'échecs</a>
+     * @author yohan
+     */
     private String contenu;
+
+    /**
+     * Type de l'évènement
+     * <ul>
+     *     <li><code>Déplacement</code> : déplacement d'un pion</li>
+     *     <li><code>Prise</code> : prise d'un pion par un autre</li>
+     *     <li><code>Undo</code> : retour en arrière sur un coup (si le niveau de difficulté l'autorise</li>
+     *     <li><code>Création</code> : création de l'échiquier</li>
+     * </ul>
+     * @author yohan
+     */
     private String type;
+
+    /**
+     * {@linkplain Case} contenant la case à l'origine du déplacement ou de la prise
+     * <p> sinon la variable est <code>null</code>
+     * @author yohan
+     */
     private Case caseOrigine;
+
+    /**
+     * {@linkplain Case} contenant la case à la destination du déplacement ou de la prise
+     * <p> sinon la variable est <code>null</code>
+     * @author yohan
+     */
     private Case caseDestination;
+
+    /**
+     * {@linkplain Piece} contenue dans la case d'origine, correspond à la pièce que le joueur
+     * a voulu bouger
+     * @see Evenement#caseOrigine
+     * @author yohan
+     */
     private Piece pieceOrigine;
+
+    /**
+     * {@linkplain Piece} contenue dans la case de destination, correspond à la pièce que le joueur
+     * a voulu prendre.
+     * <b>Uniquement dans le cas d'une</b> <code>Prise</code>
+     * @see Evenement#caseOrigine
+     * @author yohan
+     */
     private Piece pieceDestination;
 
     /**
+     * Constructeur champ à champ d'un évènement
      * @param id Identifiant de l'event
      * @param type Type de l'évènement
      * <ul><li>Création</li><li>Déplacement</li><li>Prise</li></ul>
      * @param origine Case originelle qui permettra de récupérer la position et la pièce
      * @param destination Case de destintation qui permettra de récupérer la position et la pièce
+     * @see Evenement#Evenement(Evenement) e
+     * @see Evenement#Evenement(JSONObject)
+     * @author yohan
      */
     public Evenement(String id, String type, Case origine, Case destination) {
         this.id = id;
@@ -47,7 +119,13 @@ public class Evenement {
         }
     }
 
-
+    /**
+     * Constructeur par recopie d'un évènement depuis un évènement déjà existant en paramètre
+     * @param e <code>{@linkplain Evenement}</code> : Evenement depuis lequel copier le nouvel évènement
+     * @see Evenement#Evenement(String, String, Case, Case)
+     * @see Evenement#Evenement(JSONObject)
+     * @author yohan
+     */
     public Evenement(Evenement e) {
         this.id = e.getId();
         this.dateEtHeure = e.getDateEtHeure();
@@ -59,6 +137,13 @@ public class Evenement {
         this.pieceDestination = e.getPieceDestination();
     }
 
+    /**
+     * Constructeur par recopie d'un évènement depuis un évènement déjà existant en paramètre
+     * @param e <code>{@linkplain Evenement}</code> : Evenement depuis lequel copier le nouvel évènement
+     * @see Evenement#Evenement(String, String, Case, Case)
+     * @see Evenement#Evenement(JSONObject)
+     * @author yohan
+     */
     public Evenement(JSONObject jsonObject) {
         this.id = (String) jsonObject.get("id");
         this.dateEtHeure = Tools.getLocalDateTimeFromFormatDate((String) jsonObject.get("dateEtHeure"));
@@ -66,6 +151,10 @@ public class Evenement {
         this.type = (String) jsonObject.get("type");
     }
 
+    /**
+     *
+     * @return
+     */
     public String getType() {
         return type;
     }
