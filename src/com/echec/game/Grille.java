@@ -216,7 +216,6 @@ public class Grille {
      * Fonction permettant de sauvegarder les attributs de la grille dans un objet JSON, ainsi que les cases
      * qu'elle contient elles aussi au format JSON, et qui sera ensuite
      * intégrée à la sauvegarde avec les informations sur le Jeu.
-     * sauvegarde au jeu.
      * @return <code>JSONObject</code> : La Grille sous format JSON
      * @see Piece#getJSONObject()
      * @see PlateauDeJeu#getJSONObject()
