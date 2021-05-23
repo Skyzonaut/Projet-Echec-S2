@@ -62,7 +62,7 @@ public abstract class Piece {
 
     /**
      * Setter modifiant l'id de la pièce
-     * @param value String : Nouvel id
+     * @param value <code>String</code> : Nouvel id
      * @see Piece#id
      * @author yohan
      */
@@ -81,7 +81,7 @@ public abstract class Piece {
 
     /**
      * Setter modifiant la couleur de la pièce
-     * @param value String : Nouvelle couleur
+     * @param value <code>String</code> : Nouvelle couleur
      * @see Piece#couleur
      * @author yohan
      */
@@ -100,7 +100,7 @@ public abstract class Piece {
 
     /**
      * Setter modifiant l'état de la pièce
-     * @param value String : Nouvel état
+     * @param value <code>String</code> : Nouvel état
      * @see Piece#etat
      * @author yohan
      */
