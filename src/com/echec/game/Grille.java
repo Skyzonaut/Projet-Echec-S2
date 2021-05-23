@@ -87,8 +87,8 @@ public class Grille {
 
         // Noirs en ligne 8
         this.getCase(1, 8).ajouterPiece(new Tour("Tour_Noir_1", "noir", true));
-        this.getCase(2, 8).ajouterPiece(new Fou("Fou_Noir_1", "noir", true));
-        this.getCase(3, 8).ajouterPiece(new Cavalier("Cavalier_Noir_1", "noir", true));
+        this.getCase(2, 8).ajouterPiece(new Cavalier("Cavalier_Noir_1", "noir", true));
+        this.getCase(3, 8).ajouterPiece(new Fou("Fou_Noir_1", "noir", true));
         this.getCase(4, 8).ajouterPiece(new Reine("Reine_Noir_1", "noir", true));
         this.getCase(5, 8).ajouterPiece(new Roi("Roi_Noir_1", "noir", true));
         this.getCase(6, 8).ajouterPiece(new Fou("Fou_Noir_2", "noir", true));
@@ -103,8 +103,8 @@ public class Grille {
 
         // Blancs en ligne 1
         this.getCase(1, 1).ajouterPiece(new Tour("Tour_blanc_1", "blanc", true));
-        this.getCase(2, 1).ajouterPiece(new Fou("Fou_blanc_1", "blanc", true));
-        this.getCase(3, 1).ajouterPiece(new Cavalier("Cavalier_blanc_1", "blanc", true));
+        this.getCase(2, 1).ajouterPiece(new Cavalier("Cavalier_blanc_1", "blanc", true));
+        this.getCase(3, 1).ajouterPiece(new Fou("Fou_blanc_1", "blanc", true));
         this.getCase(4, 1).ajouterPiece(new Reine("Reine_blanc_1", "blanc", true));
         this.getCase(5, 1).ajouterPiece(new Roi("Roi_blanc_1", "blanc", true));
         this.getCase(6, 1).ajouterPiece(new Fou("Fou_blanc_2", "blanc", true));
