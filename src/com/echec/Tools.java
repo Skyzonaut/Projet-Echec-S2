@@ -41,7 +41,7 @@ public class Tools {
         System.out.println("[oui/non]");
         Scanner scannerEcraserOuSave = new Scanner(System.in);
         String ecraserOuSave = scannerEcraserOuSave.nextLine();
-        while (!estString(ecraserOuSave)) {
+        while (!ecraserOuSave.equalsIgnoreCase("non") && !ecraserOuSave.equalsIgnoreCase("oui")) {
             System.out.println("Entrez [oui/non]");
             ecraserOuSave = scannerEcraserOuSave.nextLine();
         }
@@ -78,7 +78,7 @@ public class Tools {
 
     public static String deplacementToNotationEchec(Case origine, Case destination) {
         String str = origine.piece.utfString() + coordToChessNotation(origine);
-        str += coordToChessNotation(destination);
+        str += " " + coordToChessNotation(destination);
         return str;
     }
 
