@@ -40,8 +40,10 @@ public class Roi extends Piece {
         this.id = (String) jsonObject.get("id");
         this.couleur = (String) jsonObject.get("couleur");
         this.etat = (boolean) jsonObject.get("etat");
-        this.pieceNoirUTF = "♔";
-        this.pieceBlancheUTF = "♚";
+        this.pieceNoirUTF = "♚";
+        this.pieceBlancheUTF = "♔";
+//        this.pieceNoirUTF = "♔";
+//        this.pieceBlancheUTF = "♚";
     }
 
     /**

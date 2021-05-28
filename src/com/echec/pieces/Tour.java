@@ -24,8 +24,10 @@ public class Tour extends Piece {
         this.id = id;
         this.couleur = couleur;
         this.etat = etat;
-        this.pieceNoirUTF = "♖";
-        this.pieceBlancheUTF = "♜";
+        this.pieceNoirUTF = "♜";
+        this.pieceBlancheUTF = "♖";
+//        this.pieceNoirUTF = "♖";
+//        this.pieceBlancheUTF = "♜";
     }
 
     /**
@@ -51,5 +53,9 @@ public class Tour extends Piece {
      */
     public ArrayList<Case> getDeplacement(String mode) {
         return new ArrayList<>();
+    }
+
+    public static void main(String[] args) {
+        System.out.println("oui");
     }
 }

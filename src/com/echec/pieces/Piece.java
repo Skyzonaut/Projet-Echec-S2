@@ -143,9 +143,13 @@ public abstract class Piece {
      * @author yohan
      */
     public String toString() {
-        return String.format("$[ Pièce : %-8s , Id : %-16s , Couleur : %-4s , Etat : %-4b , UTF : %s ]",
-                this.getClassePiece(), this.id, this.couleur, this.etat, this.utfString());
+        return String.format("$[%s]", this.id);
     }
+
+//    public String toString() {
+//        return String.format("$[ Pièce : %-8s , Id : %-16s , Couleur : %-4s , Etat : %-4b , UTF : %s ]",
+//                this.getClassePiece(), this.id, this.couleur, this.etat, this.utfString());
+//    }
 
     /**
      * récupère la classe du pion, cette méthode étant héritée par les classes enfantes, elle permettra de récupérer

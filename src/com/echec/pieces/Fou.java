@@ -24,8 +24,10 @@ public class Fou extends Piece {
         this.id = id;
         this.couleur = couleur;
         this.etat = etat;
-        this.pieceNoirUTF = "♗";
-        this.pieceBlancheUTF = "♝";
+        this.pieceNoirUTF = "♝";
+        this.pieceBlancheUTF = "♗";
+//        this.pieceNoirUTF = "♗";
+//        this.pieceBlancheUTF = "♝";
     }
 
     /**
