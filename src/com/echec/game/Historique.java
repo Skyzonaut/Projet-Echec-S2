@@ -40,6 +40,8 @@ public class Historique {
     public Historique() {
         Evenement e = new Evenement("creation_0", "Création", null, null);
         e.setContenu("Création intiale de l'historique");
+        e.setContenuOrigineEchecNotation("Création");
+        e.setContenuDestinationEchecNotation("Création");
         this.addEvenement(e);
         this.id = Tools.getFormatDate();
     }

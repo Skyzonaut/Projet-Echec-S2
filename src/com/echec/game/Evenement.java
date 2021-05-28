@@ -94,6 +94,30 @@ public class Evenement {
     private Piece pieceDestination;
 
     /**
+     * <code>String</code> contenant l'origine de l'évènement au format international d'échec
+     * <p>Sera utilisé par l'application JavaFx {@linkplain com.echec.ui.EchecApplicationFx} pour afficher
+     * le contenu de l'évènement dans la table d'historique.
+     * @see Evenement#caseOrigine
+     * @see Historique
+     * @see com.echec.ui.UiHistorique
+     * @see com.echec.ui.UiEvent
+     * @author yohan
+     */
+    private String contenuOrigineEchecNotation;
+
+    /**
+     * <code>String</code> contenant la destination de l'évènement au format international d'échec
+     * <p>Sera utilisé par l'application JavaFx {@linkplain com.echec.ui.EchecApplicationFx} pour afficher
+     * le contenu de l'évènement dans la table d'historique.
+     * @see Evenement#caseOrigine
+     * @see Historique
+     * @see com.echec.ui.UiHistorique
+     * @see com.echec.ui.UiEvent
+     * @author yohan
+     */
+    private String contenuDestinationEchecNotation;
+
+    /**
      * Constructeur champ à champ d'un évènement
      * @param id Identifiant de l'event
      * @param type Type de l'évènement
@@ -116,11 +140,15 @@ public class Evenement {
         if (type.equalsIgnoreCase("déplacement"))  {
             this.caseDestination = destination;
             this.contenu = Tools.deplacementToNotationEchec(origine, destination);
+            this.contenuOrigineEchecNotation = this.contenu.split(" ")[0];
+            this.contenuDestinationEchecNotation = this.contenu.split("")[0] + this.contenu.split(" ")[1];
         }
         if (type.equalsIgnoreCase("prise")) {
             this.caseDestination = destination;
             this.pieceDestination = destination.piece;
             this.contenu = Tools.priseToNotationEchec(origine, destination);
+            this.contenuOrigineEchecNotation = this.contenu;
+            this.contenuDestinationEchecNotation = this.contenu;
         }
         if (type.equalsIgnoreCase("undo")) {
             this.caseDestination = destination;
@@ -243,6 +271,25 @@ public class Evenement {
     }
 
     /**
+     * Getter retournant du contenu aux notations echecs pour la case d'origine
+     * @return <code>{@linkplain Piece}</code> : {@linkplain Evenement#pieceDestination}
+     * @see Historique
+     * @author yohan
+     */
+    public String getContenuOrigineEchecNotation() {
+        return contenuOrigineEchecNotation;
+    }
+
+    /**
+     * Getter retournant du contenu aux notations echecs pour la case de destination
+     * @return <code>{@linkplain Piece}</code> : {@linkplain Evenement#pieceDestination}
+     * @see Historique
+     * @author yohan
+     */
+    public String getContenuDestinationEchecNotation() {
+        return contenuDestinationEchecNotation;
+    }
+    /**
      * Setter modifiant le type de l'évènement
      * @param type <code>String</code> : Nouveau type
      * @see Evenement#type
@@ -331,6 +378,28 @@ public class Evenement {
     }
 
     /**
+     * Setter modifiant le contenu de la case d'origine de l'évènement
+     * @param contenuOrigineEchecNotation <code>{@linkplain Piece}</code> : Nouvelle pièce de destination
+     * @see Evenement#pieceDestination
+     * @see Historique
+     * @author yohan
+     */
+    public void setContenuOrigineEchecNotation(String contenuOrigineEchecNotation) {
+        this.contenuOrigineEchecNotation = contenuOrigineEchecNotation;
+    }
+
+    /**
+     * Setter modifiant le contenu de la case de destination de l'évènement
+     * @param contenuDestinationEchecNotation <code>{@linkplain Piece}</code> : Nouvelle pièce de destination
+     * @see Evenement#pieceDestination
+     * @see Historique
+     * @author yohan
+     */
+    public void setContenuDestinationEchecNotation(String contenuDestinationEchecNotation) {
+        this.contenuDestinationEchecNotation = contenuDestinationEchecNotation;
+    }
+
+    /**
      * Override de la méthode toString() de la classe {@linkplain Object#toString()}
      * <p>
      *     Retourne la grille sous le format suivant : <br>
@@ -343,11 +412,11 @@ public class Evenement {
      * @author yohan
      */
     public String toString() {
-        return String.format("%-15s : %-13s | %-8s | %-4s | %-4s | %s",
+        return String.format("%-15s : %-13s | %-8s | %-4s | %-4s | %s | %s | %s",
                 this.id, this.type, Tools.dateDateTimeMagnify(this.dateEtHeure),
                 caseOrigine != null ? this.caseOrigine.x + " " + this.caseOrigine.y : "",
                 caseDestination != null ? this.caseDestination.x + " " + this.caseDestination.y : "",
-                this.contenu);
+                this.contenu, this.contenuOrigineEchecNotation, this.contenuDestinationEchecNotation);
     }
 
     /**
