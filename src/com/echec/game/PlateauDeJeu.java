@@ -53,7 +53,7 @@ public class PlateauDeJeu {
 
         dessinPlateau.append("\n-");
 
-        for (int i = 0; i < 8 + 1; i++)
+        for (int i = 0; i < 8; i++)
         {
             dessinPlateau.append("-".repeat(largeur));
             dessinPlateau.append("-");
@@ -103,7 +103,7 @@ public class PlateauDeJeu {
         }
         dessinPlateau.append("-");
 
-        for (int i = 0; i < 8 + 1; i++)
+        for (int i = 0; i < 8; i++)
         {
             dessinPlateau.append("-".repeat(Math.max(0, largeur)));
             dessinPlateau.append("-");
@@ -144,16 +144,19 @@ public class PlateauDeJeu {
         }
     }
 
-    public void prendrePiece(Case origine, Case destination) {
+    public String prendrePiece(Case origine, Case destination) {
         if (!destination.estVide()) {
             destination.piece.setEtat(false);
             this.historique.addEvenement("Prise", origine, destination);
             destination.vider();
             deplacerPiece(origine, destination, false);
+            return "ok";
         } else {
             System.out.println("La destination est pas vide, veuillez utiliser la commande [déplacer]");
+            return "nok";
         }
     }
+
 
     public boolean testerDeplacement(Case origin, Case destination) {
         int x = origin.x;
