@@ -1,7 +1,10 @@
-package com.echec;
+package com.echec.game;
 
+import com.echec.Tools;
 import com.echec.game.*;
 import com.echec.pieces.Piece;
+import com.echec.ui.EchecApplicationFx;
+import javafx.stage.Stage;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -10,6 +13,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class Jeu {
@@ -32,12 +38,12 @@ public class Jeu {
     public void updateHistorique() {
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         Jeu jeu = new Jeu();
         jeu.jouer();
     }
 
-    public void jouer() {
+    public void jouer() throws Exception {
 
         while (jeuEnCours) {
 
@@ -115,18 +121,28 @@ public class Jeu {
         }
     }
 
-    public void prendrePiece() {
+    public String prendrePiece() {
         Case origine = this.getCaseOrigineDepuisCoordonneeInput();
         Case destination = this.getCaseDestinationDepuisCoordonneeInput();
-        this.plateau.prendrePiece(origine, destination);
-        this.tour = (this.tour.equals("blanc")) ? "noir" : "blanc";
+        String retour = this.plateau.prendrePiece(origine, destination);
+        if (retour.equals("ok")) {
+            this.tour = (this.tour.equals("blanc")) ? "noir" : "blanc";
+            return "ok";
+        } else {
+            return "nok";
+        }
     }
 
-    public void deplacerPiece() {
+    public String deplacerPiece() {
         Case origine = this.getCaseOrigineDepuisCoordonneeInput();
         Case destination = this.getCaseDestinationDepuisCoordonneeInput();
         String retour = this.plateau.deplacerPiece(origine, destination);
-        if (retour.equals("ok")) this.tour = (this.tour.equals("blanc")) ? "noir" : "blanc";
+        if (retour.equals("ok")) {
+            this.tour = (this.tour.equals("blanc")) ? "noir" : "blanc";
+            return "ok";
+        } else {
+            return "nok";
+        }
     }
 
     public void undo() {
@@ -159,8 +175,26 @@ public class Jeu {
 
         String nouveauFichierChemin = dossierSauvegardeChemin + Tools.getNomFichierSauvegarde();
 
-        if (repertoire.isDirectory()) {
+        if (repertoire.exists()) {
+            if (repertoire.isDirectory()) {
+                try {
+                    fw = new FileWriter(nouveauFichierChemin);
+                    fw.write(jsonObject.toString());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        fw.flush();
+                        fw.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } else {
             try {
+                Path path = Paths.get("../save/");
+                Files.createDirectories(path);
                 fw = new FileWriter(nouveauFichierChemin);
                 fw.write(jsonObject.toString());
             } catch (IOException e) {
@@ -230,7 +264,7 @@ public class Jeu {
     public int[] lancerPartie(){
         int[] listeParam = new int[3];
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Pour démarrer une partie tapez : [jouer]\nPuis sélectionner le niveau de difficulté");
+        System.out.println("Sélectionnez le niveau de difficulté");
         System.out.println("\n1 - Normal : Règles standards\n2 - Apprenti : Possibilité de retour en arrière");
         listeParam[0] = scanner.nextInt();
         while (listeParam[0] > 2 ||  listeParam[0] < 1) {
