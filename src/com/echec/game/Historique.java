@@ -124,6 +124,16 @@ public class Historique {
     }
 
     /**
+     * Récupère la liste des évènements
+     * @return {@linkplain Historique#historique}
+     * @see Evenement
+     * @author yohan
+     */
+    public LinkedHashMap<Integer, Evenement> getHistorique() {
+        return historique;
+    }
+
+    /**
      * Récupère le dernier évènement qui n'est pas un retour en arrière. Permet de revenir en arrière plusieurs
      * fois en récupérant toujours le dernier évènement non "undo" afin d'éviter d'"undo" un "undo".
      * @param typeAEviter String : Type à éviter

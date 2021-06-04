@@ -169,6 +169,17 @@ public class Grille {
         return null;
     }
 
+    public ArrayList<Case> getListePieceCouleur(String couleur) {
+        ArrayList<Case> listeCases = new ArrayList<>();
+        for (Case c : this.grilleCases) {
+            if (!c.estVide()) {
+                if (c.piece.getCouleur().equalsIgnoreCase(couleur))
+                listeCases.add(c);
+            }
+        }
+        return listeCases;
+    }
+
     /**
      * <code>Outils de DEBUGGAGE</code> : Fonction affichant les informations de la grille
      * <p><i>Not in use</i>

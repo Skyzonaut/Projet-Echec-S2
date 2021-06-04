@@ -2,6 +2,7 @@ package com.echec.game;
 
 import com.echec.Tools;
 import com.echec.pieces.Piece;
+import com.echec.ui.EchecApplication;
 import org.json.simple.JSONObject;
 
 import java.time.LocalDateTime;
@@ -95,7 +96,7 @@ public class Evenement {
 
     /**
      * <code>String</code> contenant l'origine de l'évènement au format international d'échec
-     * <p>Sera utilisé par l'application JavaFx {@linkplain com.echec.ui.EchecApplicationFx} pour afficher
+     * <p>Sera utilisé par l'application JavaFx {@linkplain EchecApplication} pour afficher
      * le contenu de l'évènement dans la table d'historique.
      * @see Evenement#caseOrigine
      * @see Historique
@@ -107,7 +108,7 @@ public class Evenement {
 
     /**
      * <code>String</code> contenant la destination de l'évènement au format international d'échec
-     * <p>Sera utilisé par l'application JavaFx {@linkplain com.echec.ui.EchecApplicationFx} pour afficher
+     * <p>Sera utilisé par l'application JavaFx {@linkplain EchecApplication} pour afficher
      * le contenu de l'évènement dans la table d'historique.
      * @see Evenement#caseOrigine
      * @see Historique
@@ -188,6 +189,8 @@ public class Evenement {
         this.dateEtHeure = Tools.getLocalDateTimeFromFormatDate((String) jsonObject.get("dateEtHeure"));
         this.contenu = (String) jsonObject.get("contenu");
         this.type = (String) jsonObject.get("type");
+        this.contenuOrigineEchecNotation = (String) jsonObject.get("contenuOrigine");
+        this.contenuDestinationEchecNotation = (String) jsonObject.get("contenuDestination");
     }
 
     /**
@@ -434,6 +437,8 @@ public class Evenement {
         jsonObject.put("dateEtHeure", Tools.getFormatDate(this.dateEtHeure));
         jsonObject.put("type", this.type);
         jsonObject.put("contenu", this.contenu);
+        jsonObject.put("contenuOrigine", this.contenuOrigineEchecNotation);
+        jsonObject.put("contenuDestination", this.contenuDestinationEchecNotation);
         return jsonObject;
     }
 

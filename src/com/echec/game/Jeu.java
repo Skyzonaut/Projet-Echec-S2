@@ -1,10 +1,7 @@
 package com.echec.game;
 
 import com.echec.Tools;
-import com.echec.game.*;
 import com.echec.pieces.Piece;
-import com.echec.ui.EchecApplicationFx;
-import javafx.stage.Stage;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -25,7 +22,7 @@ public class Jeu {
     public static final String[] arrayDesCommandesRaccourci = {"d", "p", "s", "c", "u", "q", "a", "h", "n"};
     public static final List<String> listeDesCommandes = Arrays.asList(arrayDesCommandes);
     public static final List<String> listeDesCommandesRaccourci = Arrays.asList(arrayDesCommandesRaccourci);
-    private String tour;
+    private String tour = "blanc";
     private int niveauDeDifficulte;
     private static FileWriter fw;
     private Boolean jeuEnCours = true;
@@ -35,13 +32,10 @@ public class Jeu {
         this.plateau = new PlateauDeJeu();
     }
 
-    public void updateHistorique() {
-    }
-
-    public static void main(String[] args) throws Exception {
-        Jeu jeu = new Jeu();
-        jeu.jouer();
-    }
+//    public static void main(String[] args) throws Exception {
+//        Jeu jeu = new Jeu();
+//        jeu.jouer();
+//    }
 
     public void jouer() throws Exception {
 
@@ -177,26 +171,13 @@ public class Jeu {
 
         if (repertoire.exists()) {
             if (repertoire.isDirectory()) {
-                try {
-                    fw = new FileWriter(nouveauFichierChemin);
-                    fw.write(jsonObject.toString());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    try {
-                        fw.flush();
-                        fw.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+                writeFile(nouveauFichierChemin, jsonObject);
             }
         } else {
             try {
                 Path path = Paths.get("../save/");
                 Files.createDirectories(path);
-                fw = new FileWriter(nouveauFichierChemin);
-                fw.write(jsonObject.toString());
+                writeFile(nouveauFichierChemin, jsonObject);
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
@@ -209,6 +190,29 @@ public class Jeu {
             }
         }
         return "Partie sauvegardé : " + nouveauFichierChemin;
+    }
+
+    public void saveFromUi(File file) {
+        JSONObject jsonObject = this.plateau.getJSONObject();
+        jsonObject.put("tour", this.tour);
+        jsonObject.put("difficulte", this.niveauDeDifficulte);
+        writeFile(file.getPath(), jsonObject);
+    }
+
+    public void writeFile(String filePath, JSONObject jsonObject) {
+        try {
+            fw = new FileWriter(filePath);
+            fw.write(jsonObject.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                fw.flush();
+                fw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public String charger() {
@@ -241,18 +245,9 @@ public class Jeu {
                 Scanner scannerSelectionFile = new Scanner(System.in);
                 int sauvegardeChoisie = scannerSelectionFile.nextInt();
 
-
                 // On charge le fichier sélectionné et on le transforme en json
-                try {
-                    Object obj = new JSONParser().parse(new FileReader(listeFiles[sauvegardeChoisie]));
-                    JSONObject jsonObject = (JSONObject) obj;
-                    this.tour = (String) jsonObject.get("tour");
-                    this.niveauDeDifficulte = ((Long) jsonObject.get("difficulte")).intValue();
+                this.chargerJeuFromFile(listeFiles[sauvegardeChoisie]);
 
-                    this.plateau = new PlateauDeJeu((JSONObject) obj);
-                } catch (ParseException | IOException e) {
-                    e.printStackTrace();
-                }
             } else {
                 stringRetour = "Aucune sauvegarde n'a été trouvée";
             }
@@ -261,7 +256,20 @@ public class Jeu {
         return stringRetour;
     }
 
-    public int[] lancerPartie(){
+    public void chargerJeuFromFile(File file) {
+        try {
+            Object obj = new JSONParser().parse(new FileReader(file));
+            JSONObject jsonObject = (JSONObject) obj;
+            this.tour = (String) jsonObject.get("tour");
+            this.niveauDeDifficulte = ((Long) jsonObject.get("difficulte")).intValue();
+
+            this.plateau = new PlateauDeJeu((JSONObject) obj);
+        } catch (ParseException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int[] lancerPartie() {
         int[] listeParam = new int[3];
         Scanner scanner = new Scanner(System.in);
         System.out.println("Sélectionnez le niveau de difficulté");
@@ -393,6 +401,22 @@ public class Jeu {
         return grille.getCase(x, y);
     }
 
+    public void changerCouleurTour() {
+        if (this.tour.equals("blanc")) {
+            this.tour = "noir";
+        } else {
+            this.tour = "blanc";
+        }
+    }
+
+    public String getTour() {
+        return tour;
+    }
+
+    public void setTour(String string) {
+        this.tour = string;
+    }
+
     public static String getSaveFileName(String fileName) {
         if (fileName.matches("[0-9-]")) {
             String parsedSaveName = "";
@@ -418,4 +442,778 @@ public class Jeu {
             return parsedSaveName;
         } else return fileName;
     }
+
+  /*  *//**
+     * Fonction permettant d'avoir les déplacements possibles d'une piece
+     * @param posPiece <code>{@linkplain Case}</code> : Case de la piece dont on veut avoir les déplacements
+     * @return <code>ArrayList<{@linkplain Case}></code> : Retourne une liste de cases des déplacements possibles
+     * @see Case
+     * @author melissa
+     *//*
+    public ArrayList<Case> deplacementsPossible(Case posPiece) {
+        ArrayList<Case> listeCases = new ArrayList<Case>();
+
+        int x = posPiece.x;
+        int y = posPiece.y;
+
+        String classePiece = plateau.getGrille().getCase(posPiece).piece.getClassePiece();
+        String couleurPiece = plateau.getGrille().getCase(posPiece).piece.getCouleur();
+
+        if (classePiece.equalsIgnoreCase("Pion")) {
+            if (couleurPiece.equalsIgnoreCase("Blanc")) {
+                if (plateau.getGrille().getCase(x, y + 1).piece == null) {
+                    listeCases.add(new Case(x, y + 1, couleurPiece));
+                }
+                if (y == 2) {
+                    if (plateau.getGrille().getCase(x, y + 2).piece == null) {
+                        listeCases.add(new Case(x, y + 2, couleurPiece));
+                    }
+                }
+            }
+            if (couleurPiece.equalsIgnoreCase("Noir")) {
+                if (plateau.getGrille().getCase(x, y - 1).piece == null) {
+                    listeCases.add(new Case(x, y - 1, couleurPiece));
+                }
+                if (y == 7) {
+                    if (plateau.getGrille().getCase(x, y - 2).piece == null) {
+                        listeCases.add(new Case(x, y - 2, couleurPiece));
+                    }
+                }
+            }
+        }
+        if (classePiece.equalsIgnoreCase("Tour")) {
+            for (int i = x - 1 ; i > 0 ; i--) {
+                do {
+                    listeCases.add(new Case(i, y, couleurPiece));
+                } while(plateau.getGrille().getCase(i, y).piece == null);
+            }
+            for (int i = x + 1 ; i <= 8 ; i++) {
+                do {
+                    listeCases.add(new Case(i, y, couleurPiece));
+                } while(plateau.getGrille().getCase(i, y).piece == null);
+            }
+            for (int i = y - 1 ; i > 0 ; i--) {
+                do {
+                    listeCases.add(new Case(x, i, couleurPiece));
+                } while(plateau.getGrille().getCase(x, i).piece == null);
+            }
+            for (int i = y + 1 ; i <= 8 ; i++) {
+                do {
+                    listeCases.add(new Case(x, i, couleurPiece));
+                } while(plateau.getGrille().getCase(x, i).piece == null);
+            }
+        }
+        if (classePiece.equalsIgnoreCase("Reine")) {
+            for (int i = x - 1 ; i > 0 ; i--) {
+                do {
+                    listeCases.add(new Case(i, y, couleurPiece));
+                } while(plateau.getGrille().getCase(i, y).piece == null);
+            }
+            for (int i = x + 1 ; i <= 8 ; i++) {
+                do {
+                    listeCases.add(new Case(i, y, couleurPiece));
+                } while(plateau.getGrille().getCase(i, y).piece == null);
+            }
+            for (int i = y - 1 ; i > 0 ; i--) {
+                do {
+                    listeCases.add(new Case(x, i, couleurPiece));
+                } while(plateau.getGrille().getCase(x, i).piece == null);
+            }
+            for (int i = y + 1 ; i <= 8 ; i++) {
+                do {
+                    listeCases.add(new Case(x, i, couleurPiece));
+                } while(plateau.getGrille().getCase(x, i).piece == null);
+            }
+            int a = x + 1;
+            int b = y + 1;
+            do {
+                listeCases.add(new Case(a, b, couleurPiece));
+                a++;
+                b++;
+            } while(plateau.getGrille().getCase(a, b).piece == null && a <= 8 && b <= 8);
+            a = x + 1;
+            b = y - 1;
+            do {
+                listeCases.add(new Case(a, b, couleurPiece));
+                a++;
+                b--;
+            } while(plateau.getGrille().getCase(a, b).piece == null && a <= 8 && b > 0);
+            a = x - 1;
+            b = y + 1;
+            do {
+                listeCases.add(new Case(a, b, couleurPiece));
+                a--;
+                b++;
+            } while(plateau.getGrille().getCase(a, b).piece == null && a > 0 && b <= 8);
+            a = x - 1;
+            b = y - 1;
+            do {
+                listeCases.add(new Case(a, b, couleurPiece));
+                a--;
+                b--;
+            } while(plateau.getGrille().getCase(a, b).piece == null && a > 0 && b > 0);
+        }
+        if (classePiece.equalsIgnoreCase("Fou")) {
+            int a = x + 1;
+            int b = y + 1;
+            do {
+                listeCases.add(new Case(a, b, couleurPiece));
+                a++;
+                b++;
+            } while(plateau.getGrille().getCase(a, b).piece == null && a <= 8 && b <= 8);
+            a = x + 1;
+            b = y - 1;
+            do {
+                listeCases.add(new Case(a, b, couleurPiece));
+                a++;
+                b--;
+            } while(plateau.getGrille().getCase(a, b).piece == null && a <= 8 && b > 0);
+            a = x - 1;
+            b = y + 1;
+            do {
+                listeCases.add(new Case(a, b, couleurPiece));
+                a--;
+                b++;
+            } while(plateau.getGrille().getCase(a, b).piece == null && a > 0 && b <= 8);
+            a = x - 1;
+            b = y - 1;
+            do {
+                listeCases.add(new Case(a, b, couleurPiece));
+                a--;
+                b--;
+            } while(plateau.getGrille().getCase(a, b).piece == null && a > 0 && b > 0);
+        }
+        if (classePiece.equalsIgnoreCase("Cavalier")) {
+            if (plateau.getGrille().getCase(x - 1, y + 2).piece == null) {
+                listeCases.add(new Case(x - 1, y + 2, couleurPiece));
+            }
+            if (plateau.getGrille().getCase(x - 2, y + 1).piece == null) {
+                listeCases.add(new Case(x - 2, y + 1, couleurPiece));
+            }
+            if (plateau.getGrille().getCase(x - 2, y - 1).piece == null) {
+                listeCases.add(new Case(x - 2, y - 1, couleurPiece));
+            }
+            if (plateau.getGrille().getCase(x - 1, y - 2).piece == null) {
+                listeCases.add(new Case(x - 1, y - 2, couleurPiece));
+            }
+            if (plateau.getGrille().getCase(x + 1, y - 2).piece == null) {
+                listeCases.add(new Case(x + 1, y - 2, couleurPiece));
+            }
+            if (plateau.getGrille().getCase(x + 2, y - 1).piece == null) {
+                listeCases.add(new Case(x + 2, y - 1, couleurPiece));
+            }
+            if (plateau.getGrille().getCase(x + 1, y + 2).piece == null) {
+                listeCases.add(new Case(x + 1, y + 2, couleurPiece));
+            }
+            if (plateau.getGrille().getCase(x + 2, y + 1).piece == null) {
+                listeCases.add(new Case(x + 2, y + 1, couleurPiece));
+            }
+        }
+        if (classePiece.equalsIgnoreCase("Roi")) {
+            if (plateau.getGrille().getCase(x + 1, y + 1).piece == null
+                    && !detecterEchec(plateau.getGrille().getCase(posPiece).piece, plateau.getGrille().getCase(x + 1, y + 1))) {
+                listeCases.add(new Case(x + 1, y + 1, couleurPiece));
+            }
+            if (plateau.getGrille().getCase(x - 1, y + 1).piece == null
+                    && !detecterEchec(plateau.getGrille().getCase(posPiece).piece, plateau.getGrille().getCase(x - 1, y + 1))) {
+                listeCases.add(new Case(x - 1, y + 1, couleurPiece));
+            }
+            if (plateau.getGrille().getCase(x, y + 1).piece == null
+                    && !detecterEchec(plateau.getGrille().getCase(posPiece).piece, plateau.getGrille().getCase(x, y + 1))) {
+                listeCases.add(new Case(x, y + 1, couleurPiece));
+            }
+            if (plateau.getGrille().getCase(x, y - 1).piece == null
+                    && !detecterEchec(plateau.getGrille().getCase(posPiece).piece, plateau.getGrille().getCase(x, y - 1))) {
+                listeCases.add(new Case(x, y - 1, couleurPiece));
+            }
+            if (plateau.getGrille().getCase(x + 1, y).piece == null
+                    && !detecterEchec(plateau.getGrille().getCase(posPiece).piece, plateau.getGrille().getCase(x + 1, y))) {
+                listeCases.add(new Case(x + 1, y, couleurPiece));
+            }
+            if (plateau.getGrille().getCase(x - 1, y).piece == null
+                    && !detecterEchec(plateau.getGrille().getCase(posPiece).piece, plateau.getGrille().getCase(x - 1, y))) {
+                listeCases.add(new Case(x - 1, y, couleurPiece));
+            }
+            if (plateau.getGrille().getCase(x - 1, y - 1).piece == null
+                    && !detecterEchec(plateau.getGrille().getCase(posPiece).piece, plateau.getGrille().getCase(x - 1, y - 1))) {
+                listeCases.add(new Case(x - 1, y - 1, couleurPiece));
+            }
+            if (plateau.getGrille().getCase(x + 1, y - 1).piece == null
+                    && !detecterEchec(plateau.getGrille().getCase(posPiece).piece, plateau.getGrille().getCase(x + 1, y - 1))) {
+                listeCases.add(new Case(x + 1, y - 1, couleurPiece));
+            }
+        }
+        return listeCases;
+    }
+
+    *//**
+     * Fonction permettant de detecter les menaces directes sur le roi
+     * @param pieceRoi <code>{@linkplain Piece}</code> : La piece roi dont on veut vérifier l'existence d'un échec
+     * @param posRoi <code>{@linkplain Case}</code> : Case du roi dont on veut vérifier l'existence d'un échec
+     * @return <code>boolean</code> : true en cas d'échec
+     * @see Piece
+     * @see Case
+     * @author melissa
+     *//*
+    public boolean detecterEchec(Piece pieceRoi, Case posRoi) {
+        int x = posRoi.x;
+        int y = posRoi.y;
+
+        int i;
+        int j;
+
+        int supX = posRoi.x + 1;
+        int infX = posRoi.x - 1;
+        int supY = posRoi.y + 1;
+        int infY = posRoi.y - 1;
+
+        String couleur = pieceRoi.getCouleur();
+
+        for (i = infX ; i > 0 ; i--) {
+            if (plateau.getGrille().getCase(i,y).piece != null) {
+                if (!plateau.getGrille().getCase(i, y).piece.getCouleur().equalsIgnoreCase(couleur)) {
+                    if (plateau.getGrille().getCase(i, y).piece.getClassePiece().equalsIgnoreCase("Reine") || plateau.getGrille().getCase(i, y).piece.getClassePiece().equalsIgnoreCase("Tour")) {
+                        for (j = infX ; j > i ; j++) {
+                            if (plateau.getGrille().getCase(j, y).piece != null) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+        for (i = supX ; i <= 8 ; i++) {
+            if (plateau.getGrille().getCase(i,y).piece != null) {
+                if (!plateau.getGrille().getCase(i, y).piece.getCouleur().equalsIgnoreCase(couleur)) {
+                    if (plateau.getGrille().getCase(i, y).piece.getClassePiece().equalsIgnoreCase("Reine") || plateau.getGrille().getCase(i, y).piece.getClassePiece().equalsIgnoreCase("Tour")) {
+                        for (j = supX ; j < i ; j++) {
+                            if (plateau.getGrille().getCase(j, y).piece != null) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+        for (i = infY ; i > 0 ; i--) {
+            if (plateau.getGrille().getCase(x,i).piece != null) {
+                if (!plateau.getGrille().getCase(x, i).piece.getCouleur().equalsIgnoreCase(couleur)) {
+                    if (plateau.getGrille().getCase(x, i).piece.getClassePiece().equalsIgnoreCase("Reine") || plateau.getGrille().getCase(x, i).piece.getClassePiece().equalsIgnoreCase("Tour")) {
+                        for (j = infY ; j > i ; j++) {
+                            if (plateau.getGrille().getCase(x, j).piece != null) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+        for (i = supY ; i <= 8 ; i++) {
+            if (plateau.getGrille().getCase(x,i).piece != null) {
+                if (!plateau.getGrille().getCase(x, i).piece.getCouleur().equalsIgnoreCase(couleur)) {
+                    if (plateau.getGrille().getCase(x, i).piece.getClassePiece().equalsIgnoreCase("Reine") || plateau.getGrille().getCase(x, i).piece.getClassePiece().equalsIgnoreCase("Tour")) {
+                        for (j = supY ; j < i ; j++) {
+                            if (plateau.getGrille().getCase(x, j).piece != null) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+
+        i = supX; j = supY;
+        while (i <= 8 && j <= 8) {
+            if (plateau.getGrille().getCase(i,j).piece != null) {
+                if (!plateau.getGrille().getCase(i, j).piece.getCouleur().equalsIgnoreCase(couleur)) {
+                    if (plateau.getGrille().getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Reine") || plateau.getGrille().getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Fou")) {
+                        int a = supX;
+                        int b = supY;
+                        while (a < i && b < j) {
+                            if (plateau.getGrille().getCase(a, b).piece != null)
+                                return false;
+                            a++;
+                            b++;
+                        }
+                        i++;
+                        j++;
+                    }
+                }
+            }
+        }
+
+        i = infX; j = supY;
+        while (i > 0 && j <= 8) {
+            if (plateau.getGrille().getCase(i,j).piece != null) {
+                if (!plateau.getGrille().getCase(i, j).piece.getCouleur().equalsIgnoreCase(couleur)) {
+                    if (plateau.getGrille().getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Reine") || plateau.getGrille().getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Fou")) {
+                        int a = infX;
+                        int b = supY;
+                        while (a > i && b < j) {
+                            if (plateau.getGrille().getCase(a, b).piece != null)
+                                return false;
+                            a--;
+                            b++;
+                        }
+                        i--;
+                        j++;
+                    }
+                }
+            }
+        }
+
+        i = supX; j = infY;
+        while (i <= 8 && j > 0) {
+            if (plateau.getGrille().getCase(i,j).piece != null) {
+                if (!plateau.getGrille().getCase(i, j).piece.getCouleur().equalsIgnoreCase(couleur)) {
+                    if (plateau.getGrille().getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Reine") || plateau.getGrille().getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Fou")) {
+                        int a = supX;
+                        int b = infY;
+                        while (a < i && b > j) {
+                            if (plateau.getGrille().getCase(a, b).piece != null)
+                                return false;
+                            a++;
+                            b--;
+                        }
+                        i++;
+                        j--;
+                    }
+                }
+            }
+        }
+
+        i = infX; j = infY;
+        while (i > 0 && j > 0) {
+            if (plateau.getGrille().getCase(i,j).piece != null) {
+                if (!plateau.getGrille().getCase(i, j).piece.getCouleur().equalsIgnoreCase(couleur)) {
+                    if (plateau.getGrille().getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Reine") || plateau.getGrille().getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Fou")) {
+                        int a = infX;
+                        int b = infY;
+                        while (a > i && b > j) {
+                            if (plateau.getGrille().getCase(i, j).piece != null)
+                                return false;
+                            a--;
+                            b--;
+                        }
+                        i--;
+                        j--;
+                    }
+                }
+            }
+        }
+
+        if (plateau.getGrille().getCase(x - 1, y + 2).piece.getClassePiece().equalsIgnoreCase("Cavalier")
+                && !plateau.getGrille().getCase(x - 1, y + 2).piece.getCouleur().equalsIgnoreCase(couleur))
+            return true;
+        if (plateau.getGrille().getCase(x - 2, y + 1).piece.getClassePiece().equalsIgnoreCase("Cavalier")
+                && !plateau.getGrille().getCase(x - 2, y + 1).piece.getCouleur().equalsIgnoreCase(couleur))
+            return true;
+        if (plateau.getGrille().getCase(x - 2, y - 1).piece.getClassePiece().equalsIgnoreCase("Cavalier")
+                && !plateau.getGrille().getCase(x - 1, y + 2).piece.getCouleur().equalsIgnoreCase(couleur))
+            return true;
+        if (plateau.getGrille().getCase(x - 1, y - 2).piece.getClassePiece().equalsIgnoreCase("Cavalier")
+                && !plateau.getGrille().getCase(x - 1, y - 2).piece.getCouleur().equalsIgnoreCase(couleur))
+            return true;
+        if (plateau.getGrille().getCase(x + 1, y - 2).piece.getClassePiece().equalsIgnoreCase("Cavalier")
+                && !plateau.getGrille().getCase(x + 1, y - 2).piece.getCouleur().equalsIgnoreCase(couleur))
+            return true;
+        if (plateau.getGrille().getCase(x + 2, y - 1).piece.getClassePiece().equalsIgnoreCase("Cavalier")
+                && !plateau.getGrille().getCase(x + 2, y - 1).piece.getCouleur().equalsIgnoreCase(couleur))
+            return true;
+        if (plateau.getGrille().getCase(x + 1, y + 2).piece.getClassePiece().equalsIgnoreCase("Cavalier")
+                && !plateau.getGrille().getCase(x + 1, y + 2).piece.getCouleur().equalsIgnoreCase(couleur))
+            return true;
+        if (plateau.getGrille().getCase(x + 2, y + 1).piece.getClassePiece().equalsIgnoreCase("Cavalier")
+                && !plateau.getGrille().getCase(x + 2, y + 1).piece.getCouleur().equalsIgnoreCase(couleur))
+            return true;
+
+        if (couleur.equalsIgnoreCase("Noir")) {
+            if ((plateau.getGrille().getCase(infX, infY).piece.getClassePiece().equalsIgnoreCase("Pion")
+                    && plateau.getGrille().getCase(infX, infY).piece.getClassePiece().equalsIgnoreCase("Blanc")))
+                return true;
+            if (plateau.getGrille().getCase(supX, infY).piece.getClassePiece().equalsIgnoreCase("Pion")
+                    && (plateau.getGrille().getCase(supX, infY).piece.getCouleur().equalsIgnoreCase("Blanc")))
+                return true;
+            if (plateau.getGrille().getCase(x, infY).piece.getClassePiece().equalsIgnoreCase("Roi")
+                    && plateau.getGrille().getCase(x, infY).piece.getCouleur().equalsIgnoreCase("Blanc"))
+                return true;
+            if (plateau.getGrille().getCase(x, supY).piece.getClassePiece().equalsIgnoreCase("Roi")
+                    && plateau.getGrille().getCase(x, supY).piece.getCouleur().equalsIgnoreCase("Blanc"))
+                return true;
+            if (plateau.getGrille().getCase(infX, y).piece.getClassePiece().equalsIgnoreCase("Roi")
+                    && plateau.getGrille().getCase(infX, y).piece.getCouleur().equalsIgnoreCase("Blanc"))
+                return true;
+            if (plateau.getGrille().getCase(supX, y).piece.getClassePiece().equalsIgnoreCase("Roi")
+                    && plateau.getGrille().getCase(supX, y).piece.getCouleur().equalsIgnoreCase("Blanc"))
+                return true;
+            if (plateau.getGrille().getCase(infX, supY).piece.getClassePiece().equalsIgnoreCase("Roi")
+                    && plateau.getGrille().getCase(infX, supY).piece.getCouleur().equalsIgnoreCase("Blanc"))
+                return true;
+            if (plateau.getGrille().getCase(supX, supY).piece.getClassePiece().equalsIgnoreCase("Roi")
+                    && plateau.getGrille().getCase(supX, supY).piece.getCouleur().equalsIgnoreCase("Blanc"))
+                return true;
+        }
+        if (couleur.equalsIgnoreCase("Blanc")) {
+            if ((plateau.getGrille().getCase(infX, supY).piece.getClassePiece().equalsIgnoreCase("Pion")
+                    && plateau.getGrille().getCase(infX, supY).piece.getClassePiece().equalsIgnoreCase("Noir")))
+                return true;
+            if (plateau.getGrille().getCase(supX, supY).piece.getClassePiece().equalsIgnoreCase("Pion")
+                    && (plateau.getGrille().getCase(supX, supY).piece.getCouleur().equalsIgnoreCase("Noir")))
+                return true;
+            if (plateau.getGrille().getCase(x, infY).piece.getClassePiece().equalsIgnoreCase("Roi")
+                    && plateau.getGrille().getCase(x, infY).piece.getCouleur().equalsIgnoreCase("Noir"))
+                return true;
+            if (plateau.getGrille().getCase(x, supY).piece.getClassePiece().equalsIgnoreCase("Noir")
+                    && plateau.getGrille().getCase(x, supY).piece.getCouleur().equalsIgnoreCase("Noir"))
+                return true;
+            if (plateau.getGrille().getCase(infX, y).piece.getClassePiece().equalsIgnoreCase("Roi")
+                    && plateau.getGrille().getCase(infX, y).piece.getCouleur().equalsIgnoreCase("Noir"))
+                return true;
+            if (plateau.getGrille().getCase(supX, y).piece.getClassePiece().equalsIgnoreCase("Roi")
+                    && plateau.getGrille().getCase(supX, y).piece.getCouleur().equalsIgnoreCase("Noir"))
+                return true;
+            if (plateau.getGrille().getCase(infX, supY).piece.getClassePiece().equalsIgnoreCase("Roi")
+                    && plateau.getGrille().getCase(infX, supY).piece.getCouleur().equalsIgnoreCase("Noir"))
+                return true;
+            if (plateau.getGrille().getCase(supX, supY).piece.getClassePiece().equalsIgnoreCase("Roi")
+                    && plateau.getGrille().getCase(supX, supY).piece.getCouleur().equalsIgnoreCase("Noir"))
+                return true;
+        }
+
+        return false;
+    }
+
+    *//**
+     * Fonction permettant de vérifier l'existence de collisions entre les pieces en cas de déplacement
+     * @param origin <code>{@linkplain Case}</code> : Case originale de la piece qu'on veut déplacer
+     * @param destination <code>{@linkplain Case}</code> : Case de la destination où on veut déplacer la piece
+     * @return <code>boolean</code> : true en cas de collision possible
+     * @see Case
+     * @author melissa
+     *//*
+    public boolean testerCollisions(Case origin, Case destination) {
+        int x = origin.x;
+        int y = origin.y;
+        int dx = destination.x;
+        int dy = destination.y;
+        int i;
+        int j;
+
+        String classeOrigin = origin.piece.getClassePiece();
+        String couleur = origin.piece.getCouleur();
+
+        if (classeOrigin.equalsIgnoreCase("Reine")) {
+            if (Math.abs(dx - x) == Math.abs(dy - y)) {
+                if (dy > y && dx > x) {
+                    i = x + 1;
+                    j = y + 1;
+                    while (i < dx && j < dy) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        i++;
+                        j++;
+                    }
+                }
+                if (dy < y && dx < x) {
+                    i = x - 1;
+                    j = y - 1;
+                    while (dx < i && dy < j) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        i--;
+                        j--;
+                    }
+                }
+                if (dy > y && dx < x) {
+                    i = x - 1;
+                    j = y + 1;
+                    while (dx < i && j < dy) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        j++;
+                        i--;
+                    }
+                }
+                if (dy < y && dx > x) {
+                    i = x + 1;
+                    j = y - 1;
+                    while (i < dx && dy > j) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        j--;
+                        i++;
+                    }
+                }
+            }
+            if (dx == x) {
+                if (dy > y) {
+                    i = x;
+                    j = y + 1;
+                    while (j < dy) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        j++;
+                    }
+                }
+                if (dy < y) {
+                    i = x;
+                    j = y - 1;
+                    while (dy < j) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        j--;
+                    }
+                }
+            }
+            if (dy == y) {
+                if (dx > x) {
+                    i = x + 1;
+                    j = y;
+                    while (i < dx) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        i++;
+                    }
+                }
+                if (dx < x) {
+                    i = x - 1;
+                    j = y - 1;
+                    while (dx < i) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        j--;
+                    }
+                }
+            }
+        }
+        if (classeOrigin.equalsIgnoreCase("Tour")) {
+            if (dx == x) {
+                if (dy > y) {
+                    i = x;
+                    j = y + 1;
+                    while (j < dy) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        j++;
+                    }
+                }
+                if (dy < y) {
+                    i = x;
+                    j = y - 1;
+                    while (dy < j) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        j--;
+                    }
+                }
+            }
+            if (dy == y) {
+                if (dx > x) {
+                    i = x + 1;
+                    j = y;
+                    while (i < dx) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        i++;
+                    }
+                }
+                if (dx < x) {
+                    i = x - 1;
+                    j = y - 1;
+                    while (dx < i) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        j--;
+                    }
+                }
+            }
+        }
+        if (classeOrigin.equalsIgnoreCase("Fou")) {
+            if (Math.abs(dx - x) == Math.abs(dy - y)) {
+                if (dy > y && dx > x) {
+                    i = x + 1;
+                    j = y + 1;
+                    while (i < dx && j < dy) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        i++;
+                        j++;
+                    }
+                }
+                if (dy < y && dx < x) {
+                    i = x - 1;
+                    j = y - 1;
+                    while (dx < i && dy < j) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        i--;
+                        j--;
+                    }
+                }
+                if (dy > y && dx < x) {
+                    i = x - 1;
+                    j = y + 1;
+                    while (dx < i && j < dy) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        j++;
+                        i--;
+                    }
+                }
+                if (dy < y && dx > x) {
+                    i = x + 1;
+                    j = y - 1;
+                    while (i < dx && dy > j) {
+                        if (plateau.getGrille().getCase(i, j).piece != null) {
+                            return false;
+                        }
+                        j--;
+                        i++;
+                    }
+                }
+            }
+        }
+        if (classeOrigin.equalsIgnoreCase("Roi")) {
+            if (plateau.getGrille().getCase(destination).piece == null
+                    || (plateau.getGrille().getCase(destination).piece != null
+                    && !plateau.getGrille().getCase(destination).piece.getCouleur().equalsIgnoreCase(couleur)
+                    && !plateau.getGrille().getCase(destination).piece.getClassePiece().equalsIgnoreCase("Roi"))) {
+                if (!detecterEchec(plateau.getGrille().getCase(origin).piece, plateau.getGrille().getCase(destination)))
+                    return true;
+                else return false;
+            }
+
+        }
+        if (classeOrigin.equalsIgnoreCase("Pion")) {
+            if (couleur.equalsIgnoreCase("Blanc")) {
+                if (dy == y + 1 && plateau.getGrille().getCase(x, y + 1).piece == null) {
+                    return true;
+                }
+                if (dy == y + 2 && y == 2 && plateau.getGrille().getCase(x, y + 2).piece == null) {
+                    return true;
+                }
+                if (dy == y + 1 && (dx == x + 1 || dx == x - 1) && !(plateau.getGrille().getCase(x, y + 1).piece == null)) {
+                    return true;
+                }
+            }
+            if (couleur.equalsIgnoreCase("Noir")) {
+                if (dy == y - 1 && plateau.getGrille().getCase(x, y - 1).piece == null) {
+                    return true;
+                }
+                if (dy == y - 2 && y == 7 && plateau.getGrille().getCase(x, y - 2).piece == null) {
+                    return true;
+                }
+                if (dy == y - 1 && (dx == x + 1 || dx == x - 1) && !(plateau.getGrille().getCase(x, y - 1).piece == null)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return true;
+    }
+
+    *//**
+     * Fonction permettant de vérifier la légalité des déplacements
+     * @param origin <code>{@linkplain Case}</code> : Case originale de la piece qu'on veut déplacer
+     * @param destination <code>{@linkplain Case}</code> : Case de la destination où on veut déplacer la piece
+     * @return <code>boolean</code> : true quand le déplacement est légal
+     * @see Case
+     * @author melissa
+     *//*
+    public boolean testerDeplacement (Case origin, Case destination){
+        int x = origin.x;
+        int y = origin.y;
+
+        int dx = destination.x;
+        int dy = destination.y;
+
+        String classe = origin.piece.getClassePiece();
+        String couleur = origin.piece.getCouleur();
+
+        if (classe.equalsIgnoreCase("Reine")) {
+            if (Math.abs(dx - x) == Math.abs(dy - y)) {
+                return true;
+            }
+            if (dx == x) {
+                return true;
+            }
+            if (dy == y) {
+                return true;
+            }
+            return false;
+        }
+        if (classe.equalsIgnoreCase("Tour")) {
+            if (dx == x) {
+                return true;
+            }
+            if (dy == y) {
+                return true;
+            }
+            return false;
+        }
+        if (classe.equalsIgnoreCase("Fou")) {
+            if (Math.abs(dx - x) == Math.abs(dy - y)) {
+                return true;
+            }
+            return false;
+        }
+        if (classe.equalsIgnoreCase("Cavalier")) {
+            if (((dx == x + 2) || (dx == x - 2)) && ((dy == y + 1) || (dy == y - 1))) {
+                return true;
+            }
+            if (((dx == x + 1) || (dx == x - 1)) && ((dy == y + 2) || (dy == y - 2))) {
+                return true;
+            }
+            return false;
+        }
+        if (classe.equalsIgnoreCase("Roi")) {
+            if (dx == x && (dy == y - 1 || dy == y + 1)) {
+                return true;
+            }
+            if ((dx == x - 1 || dx == x + 1) && (dy == y - 1 || dy == y + 1)) {
+                return true;
+            }
+            return false;
+        }
+        if (classe.equalsIgnoreCase("Pion")) {
+            if (couleur.equalsIgnoreCase("Blanc")) {
+                if (dy == y + 1) {
+                    return true;
+                }
+                if (dy == y + 2 && y == 2) {
+                    return true;
+                }
+            }
+            if (couleur.equalsIgnoreCase("Noir")) {
+                if (dy == y - 1) {
+                    return true;
+                }
+                if (dy == y - 2 && y == 7) {
+                    return true;
+                }
+            }
+
+        }
+        return false;
+    }*/
+
 }
