@@ -404,8 +404,8 @@
                <children>
                   <TableView fx:id="listeImageView" focusTraversable="false" layoutX="9.0" layoutY="10.0" prefHeight="607.0" prefWidth="332.0">
                     <columns>
-                      <TableColumn fx:id="historiqueOriginColumn" editable="false" prefWidth="167.0" sortable="false" style="-fx-text-weight: bold; -fx-alignment: center;" text="Origine" />
-                      <TableColumn fx:id="historiqueDestinationColumn" editable="false" minWidth="3.0" prefWidth="163.0" sortable="false" style="-fx-text-weight: bold; -fx-alignment: center;" text="Destination" />
+                      <TableColumn fx:id="historiqueOriginColumn" editable="false" prefWidth="167.0" sortable="false" style="-fx-text-weight: normal; -fx-alignment: center;" text="Origine" />
+                      <TableColumn fx:id="historiqueDestinationColumn" editable="false" minWidth="3.0" prefWidth="163.0" sortable="false" style="-fx-text-weight: normal; -fx-alignment: center;" text="Destination" />
                     </columns>
                   </TableView>
                   <Label fx:id="labelTour" alignment="CENTER" layoutX="9.0" layoutY="628.0" prefHeight="184.0" prefWidth="332.0" style="-fx-background-color: white;" text="Au tour des blancs" textAlignment="CENTER">

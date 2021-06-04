@@ -86,18 +86,18 @@ public class Grille {
     public void initialiserGrille() {
 
         // Noirs en ligne 8
-        this.getCase(1, 8).ajouterPiece(new Tour("Tour_Noir_1", "noir", true));
-        this.getCase(2, 8).ajouterPiece(new Cavalier("Cavalier_Noir_1", "noir", true));
-        this.getCase(3, 8).ajouterPiece(new Fou("Fou_Noir_1", "noir", true));
-        this.getCase(4, 8).ajouterPiece(new Reine("Reine_Noir_1", "noir", true));
-        this.getCase(5, 8).ajouterPiece(new Roi("Roi_Noir_1", "noir", true));
-        this.getCase(6, 8).ajouterPiece(new Fou("Fou_Noir_2", "noir", true));
-        this.getCase(7, 8).ajouterPiece(new Cavalier("Cavalier_Noir_2", "noir", true));
-        this.getCase(8, 8).ajouterPiece(new Tour("Tour_Noir_2", "noir", true));
+        this.getCase(1, 8).ajouterPiece(new Tour("Tour_noir_1", "noir", true));
+        this.getCase(2, 8).ajouterPiece(new Cavalier("Cavalier_noir_1", "noir", true));
+        this.getCase(3, 8).ajouterPiece(new Fou("Fou_noir_1", "noir", true));
+        this.getCase(4, 8).ajouterPiece(new Reine("Reine_noir_1", "noir", true));
+        this.getCase(5, 8).ajouterPiece(new Roi("Roi_noir_1", "noir", true));
+        this.getCase(6, 8).ajouterPiece(new Fou("Fou_noir_2", "noir", true));
+        this.getCase(7, 8).ajouterPiece(new Cavalier("Cavalier_noir_2", "noir", true));
+        this.getCase(8, 8).ajouterPiece(new Tour("Tour_noir_2", "noir", true));
 
         // Pions noirs en ligne 7
         for (int x = 1; x <= 8; x++) {
-            this.getCase(x, 7).ajouterPiece(new Pion(String.format("Pion_Noir_%s", x),
+            this.getCase(x, 7).ajouterPiece(new Pion(String.format("Pion_noir_%s", x),
                     "noir", true));
         }
 
@@ -114,7 +114,7 @@ public class Grille {
 
         // Pions blancs en ligne 8
         for (int x = 1; x <= 8; x++) {
-            this.getCase(x, 2).ajouterPiece(new Pion(String.format("Pion_Blanc_%s", x),
+            this.getCase(x, 2).ajouterPiece(new Pion(String.format("Pion_blanc_%s", x),
                     "blanc", true));
         }
     }
@@ -168,13 +168,24 @@ public class Grille {
         }
         return null;
     }
+    public Case getRoi(String couleur) {
+        for (Case c : this.grilleCases) {
+            if (c.piece != null) {
+                if (c.piece.getCouleur().equalsIgnoreCase(couleur) && c.piece.getClassePiece().equalsIgnoreCase("roi")) {
+                    return c;
+                }
+            }
+        }
+        return null;
+    }
 
     public ArrayList<Case> getListePieceCouleur(String couleur) {
         ArrayList<Case> listeCases = new ArrayList<>();
         for (Case c : this.grilleCases) {
             if (!c.estVide()) {
-                if (c.piece.getCouleur().equalsIgnoreCase(couleur))
-                listeCases.add(c);
+                if (c.piece.getCouleur().equalsIgnoreCase(couleur)) {
+                    listeCases.add(c);
+                }
             }
         }
         return listeCases;

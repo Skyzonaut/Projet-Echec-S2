@@ -1,18 +1,23 @@
 package com.echec.game;
+
+import com.echec.Tools;
 import com.echec.pieces.Piece;
 import org.json.simple.JSONObject;
-import com.echec.Tools;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PlateauDeJeu {
 
     private String id;
     private Grille grille;
     public Historique historique = new Historique();
-    public ArrayList<Case> listeDeplacementNoirs = new ArrayList<>();
-    public ArrayList<Case> listeDeplacementBlancs = new ArrayList<>();
+    public ArrayList<Deplacement> listeDeplacementNoirs = new ArrayList<>();
+    public ArrayList<Deplacement> listeDeplacementBlancs = new ArrayList<>();
+    private boolean enEchec = false;
+    private Echec echec;
 
     public PlateauDeJeu() {
         this.id = "plateau " + Tools.getFormatDate();
@@ -24,6 +29,7 @@ public class PlateauDeJeu {
         this.id = (String) jsonObject.get("id");
         this.grille = new Grille((JSONObject) jsonObject.get("grille"));
         this.historique = new Historique((JSONObject) jsonObject.get("historique"));
+        this.enEchec = (Boolean) jsonObject.get("enEchec");
     }
 
     public void init() {
@@ -52,7 +58,7 @@ public class PlateauDeJeu {
         for (int colonne = 1; colonne <= 8; colonne++) {
             for (int j = 0; j < largeur; j++) {
                 if (j == (largeur / 2)) {
-                    dessinPlateau.append(Tools.getLettreColonne(colonne) + " ");
+                    dessinPlateau.append(Tools.getLettreColonne(colonne)).append(" ");
                 } else {
                     dessinPlateau.append(" ");
                 }
@@ -163,11 +169,20 @@ public class PlateauDeJeu {
         return this.id;
     }
 
+    public boolean isEnEchec() {
+        return enEchec;
+    }
+
+    public void setEnEchec(boolean enEchec) {
+        this.enEchec = enEchec;
+    }
+
     public JSONObject getJSONObject() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("id", this.id);
         jsonObject.put("grille", this.grille.getJSONObject());
         jsonObject.put("historique", this.historique.getJSONObject());
+        jsonObject.put("enEchec",this.enEchec );
         return jsonObject;
     }
 
@@ -176,11 +191,10 @@ public class PlateauDeJeu {
      * @param posPiece <code>{@linkplain Case}</code> : Case de la piece dont on veut avoir les déplacements
      * @return <code>ArrayList<{@linkplain Case}></code> : Retourne une liste de cases des déplacements possibles
      * @see Case
-     * @throws NullPointerException
      * @author melissa
      */
     public ArrayList<Case> deplacementsPossible (Case posPiece) {
-        ArrayList<Case> listeCases = new ArrayList<Case>();
+        ArrayList<Case> listeCases = new ArrayList<>();
 
         int x = posPiece.x;
         int y = posPiece.y;
@@ -417,7 +431,7 @@ public class PlateauDeJeu {
                 }
                 a++;
                 b--;
-            };
+            }
 
             a = x - 1;
             b = y + 1;
@@ -639,57 +653,101 @@ public class PlateauDeJeu {
     }
 
     public void updateListeDeplacements() {
-        ArrayList<Case> listeNoirs = new ArrayList<>();
-        ArrayList<Case> listeBlancs = new ArrayList<>();
+        ArrayList<Case> listeNoirs;
+        ArrayList<Case> listeBlancs;
+        ArrayList<Case> l = new ArrayList<>();
         listeNoirs = this.grille.getListePieceCouleur("noir");
         listeBlancs = this.grille.getListePieceCouleur("blanc");
 
         for (Case c : listeNoirs) {
             if (c.piece.getClassePiece().equalsIgnoreCase("pion")) {
-                if (c.piece.getCouleur().equalsIgnoreCase("noir")) {
-                    listeDeplacementNoirs.add(this.grille.getCase(c.x + 1, c.y - 1));
-                    listeDeplacementNoirs.add(this.grille.getCase(c.x - 1, c.y - 1));
-                }
+                l = new ArrayList<>();
+                l.add(this.grille.getCase(c.x + 1, c.y + 1));
+                l.add(this.grille.getCase(c.x - 1, c.y + 1));
+                this.listeDeplacementNoirs.add(new Deplacement(c, l));
+            } else if (c.piece.getClassePiece().equalsIgnoreCase("roi")) {
+
+                l = new ArrayList<>();
+                l.add(this.grille.getCase(c.x, c.y + 1));
+                l.add(this.grille.getCase(c.x, c.y - 1));
+                this.listeDeplacementNoirs.add(new Deplacement(c, l));
+
+                l = new ArrayList<>();
+                l.add(this.grille.getCase(c.x + 1, c.y + 1));
+                l.add(this.grille.getCase(c.x + 1, c.y ));
+                l.add(this.grille.getCase(c.x + 1, c.y - 1));
+                this.listeDeplacementNoirs.add(new Deplacement(c, l));
+
+                l = new ArrayList<>();
+                l.add(this.grille.getCase(c.x - 1, c.y + 1));
+                l.add(this.grille.getCase(c.x - 1, c.y));
+                l.add(this.grille.getCase(c.x - 1, c.y - 1));
+                this.listeDeplacementNoirs.add(new Deplacement(c, l));
+
             } else {
-                System.out.println(c);
+                l = new ArrayList<>();
                 for (Case d : this.deplacementsPossible(c)) {
-                    System.out.println("\t\t" + d);
-                    if (!listeDeplacementNoirs.contains(d)) {
-                        listeDeplacementNoirs.add(d);
-                    }
+                    l.add(d);
                 }
+                this.listeDeplacementNoirs.add(new Deplacement(c, l));
             }
         }
 
         for (Case c : listeBlancs) {
             if (c.piece.getClassePiece().equalsIgnoreCase("pion")) {
-                if (c.piece.getCouleur().equalsIgnoreCase("noir")) {
-                    listeDeplacementBlancs.add(this.grille.getCase(c.x + 1, c.y + 1));
-                    listeDeplacementBlancs.add(this.grille.getCase(c.x - 1, c.y + 1));
-                }
+                l = new ArrayList<>();
+                l.add(this.grille.getCase(c.x + 1, c.y + 1));
+                l.add(this.grille.getCase(c.x - 1, c.y + 1));
+                this.listeDeplacementBlancs.add(new Deplacement(c, l));
+            } else if (c.piece.getClassePiece().equalsIgnoreCase("roi")) {
+
+                l = new ArrayList<>();
+                l.add(this.grille.getCase(c.x, c.y + 1));
+                l.add(this.grille.getCase(c.x, c.y - 1));
+                this.listeDeplacementBlancs.add(new Deplacement(c, l));
+
+                l = new ArrayList<>();
+                l.add(this.grille.getCase(c.x + 1, c.y + 1));
+                l.add(this.grille.getCase(c.x + 1, c.y ));
+                l.add(this.grille.getCase(c.x + 1, c.y - 1));
+                this.listeDeplacementBlancs.add(new Deplacement(c, l));
+
+                l = new ArrayList<>();
+                l.add(this.grille.getCase(c.x - 1, c.y + 1));
+                l.add(this.grille.getCase(c.x - 1, c.y));
+                l.add(this.grille.getCase(c.x - 1, c.y - 1));
+                this.listeDeplacementBlancs.add(new Deplacement(c, l));
+
             } else {
-                System.out.println(c);
+                l = new ArrayList<>();
                 for (Case d : this.deplacementsPossible(c)) {
-                    System.out.println("\t\t" + d);
-                    if (!listeDeplacementBlancs.contains(d)) {
-                        listeDeplacementBlancs.add(d);
-                    }
+                    l.add(d);
                 }
+                this.listeDeplacementBlancs.add(new Deplacement(c, l));
             }
         }
     }
+
     public boolean detecterEchec2 (Piece pieceRoi, Case posRoi) {
         String couleurEnnemie = (pieceRoi.getCouleur() == "noir") ? "blanc" : "noir";
-
+        Echec echec = new Echec(this, posRoi);
         if (couleurEnnemie.equals("noir")) {
-            if (this.listeDeplacementNoirs.contains(posRoi))
-            return true;
+            for (Deplacement d : this.listeDeplacementNoirs) {
+                if (d.contains(posRoi)) {
+                    echec.addAttaquant(d);
+                }
+            }
         }
         if (couleurEnnemie.equals("blanc")) {
-            if (this.listeDeplacementBlancs.contains(posRoi))
-                return true;
+            for (Deplacement d : this.listeDeplacementBlancs) {
+                if (d.contains(posRoi)) {
+                    echec.addAttaquant(d);
+                }
+            }
         }
-        return false;
+        echec.trouverSauveur();
+        this.echec = echec;
+        return echec.isEchec();
     }
 
     /**
@@ -919,7 +977,6 @@ public class PlateauDeJeu {
                     return true;
             }
             if (grille.getCase(x+1, y-1).piece != null) {
-                System.out.println("3");
                 if (grille.getCase(x+1, y-1).piece.getClassePiece().equalsIgnoreCase("Pion")
                         && (grille.getCase(x+1, y-1).piece.getCouleur().equalsIgnoreCase("Blanc")))
                     return true;

@@ -38,6 +38,8 @@ public class EchecApplication extends Application {
     private Stage primaryStage;
     private Label labelTour;
     private ArrayList<Pane> paintedCase = new ArrayList<Pane>();
+    private ArrayList<Case> listeDeplacementsPossibles;
+    private Case caseRoiEnEchec;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -54,6 +56,7 @@ public class EchecApplication extends Application {
         addPionToGrid();
         initializeHistoriqueTable();
         initializeController();
+
 
         Scene scene = new Scene(root);
         scene.getStylesheets().add("com/echec/stylesheets/style.css");
@@ -163,62 +166,105 @@ public class EchecApplication extends Application {
                 int yD = Integer.parseInt(this.uiHistorique.getLastUiEvent().getComponentOriginId().split("")[2]);
                 Case lastEventClickCase = this.jeu.plateau.getGrille().getCase(xD, yD);
 
-//                if (lastEventClickCase.piece.getCouleur().equals(this.jeu.getTour()))
-//                {
-
-                    if (targetClickCase.piece == null)
+                    if (this.listeDeplacementsPossibles.contains(targetClickCase))
                     {
-
-                        if (this.jeu.plateau.testerDeplacement(lastEventClickCase, targetClickCase)) {
-                            System.out.println("C'EST BON");
-                        } else System.out.println("C'EST PAS BON CONNARD");
-
-                        String retour = this.jeu.plateau.deplacerPiece(lastEventClickCase, targetClickCase);
+                        String retour;
+                        if (targetClickCase.piece == null)
+                        {
+                            retour = this.jeu.plateau.deplacerPiece(lastEventClickCase, targetClickCase);
+                        }
+                        else
+                        {
+                            retour = this.jeu.plateau.prendrePiece(lastEventClickCase, targetClickCase);
+                        }
 
                         if (retour.equals("ok"))
                         {
-                            String lastEventClickId = this.uiHistorique.getLastUiEvent().getComponentOriginId();
-                            String targetClickId = targetImgView.getId();
-                            this.deplacerPieceUI(lastEventClickId, targetClickId);
-                            this.updateHistoriqueTable();
-                            this.jeu.changerCouleurTour();
-                            this.setLabelTour();
+                            Case caseRoi = this.jeu.plateau.getGrille().getRoi(targetClickCase.piece.getCouleur());
+                            if (this.jeu.plateau.detecterEchec2(caseRoi.piece, caseRoi))
+                            {
+                                PopupWindow popupWindow = new PopupWindow("Déplacement impossible,\n il mettrait le roi en echec");
+                                popupWindow.display();
+                                this.jeu.undo();
+                            }
+                            else
+                            {
+                                String lastEventClickId = this.uiHistorique.getLastUiEvent().getComponentOriginId();
+                                String targetClickId = targetImgView.getId();
+                                this.deplacerPieceUI(lastEventClickId, targetClickId);
+                                this.updateHistoriqueTable();
+                                this.jeu.changerCouleurTour();
+                                this.setLabelTour();
+                            }
                         }
-                    } else {
-                        System.out.println("La destination n'est pas vide");
+                        String couleurEnnemie = targetClickCase.piece.getCouleur().equals("noir") ? "blanc" : "noir";
+                        caseRoiEnEchec = this.jeu.plateau.getGrille().getRoi(couleurEnnemie);
+                        if (this.jeu.plateau.detecterEchec2(caseRoiEnEchec.piece, caseRoiEnEchec))
+                        {
+                            this.marquerRoi(caseRoiEnEchec);
+                            this.jeu.plateau.setEnEchec(true);
+                            listeDeplacementsPossibles = this.jeu.plateau.deplacementsPossible(caseRoiEnEchec);
+
+                            if (this.jeu.plateau.isEnEchec() && listeDeplacementsPossibles.size() == 0)
+                            {
+                                this.perdu();
+                            }
+                        }
+                        else
+                        {
+                            this.jeu.plateau.setEnEchec(false);
+                        }
+                    }
+                    else
+                    {
+                        System.out.println("Ce déplacement n'est pas autorisé");
                     }
 //                } else {
 //                    System.out.println("Ce n'est pas à votre tour");
 //                }
-            } else {
+            }
+            else
+            {
                 System.out.println("Vous n'avez sélectionné aucune pièces");
             }
             resetMarquageDeplacement();
             this.setOriginalStyle(this.uiHistorique.getLastUiEvent().getComponentOriginId());
-
-        } else {
-            this.listePane.get(String.format("p%d%d", x, y)).setStyle("-fx-background-color: #679065");
-
-            if (targetClickCase.piece != null) {
-
-                ArrayList<Case> listeDeplacementsPossibles = this.jeu.plateau.deplacementsPossible(targetClickCase);
-                marquerDeplacement(listeDeplacementsPossibles);
-//                try {/*
-//                    }
-//                } catch (NullPointerException n) {System.out.println(n.getMessage());}*/
+        }
+        else
+        {
+            if (this.jeu.plateau.isEnEchec()) {
+                if (targetClickCase.equals(this.caseRoiEnEchec)) {
+                    listeDeplacementsPossibles = this.jeu.plateau.deplacementsPossible(targetClickCase);
+                    marquerDeplacement(listeDeplacementsPossibles);
+                }
+            }
+            else
+            {
+                this.listePane.get(String.format("p%d%d", x, y)).setStyle("-fx-background-color: #679065");
+                if (targetClickCase.piece != null)
+                {
+                    listeDeplacementsPossibles = this.jeu.plateau.deplacementsPossible(targetClickCase);
+                    marquerDeplacement(listeDeplacementsPossibles);
+                }
             }
         }
-
         uiHistorique.addUiEvent(targetImgView.getId(), targetClickCase);
         uiHistorique.clicked();
-//        uiHistorique.afficher();
+    }
+
+    public void perdu() {
+        PopupWindow popupWindow = new PopupWindow(String.format("Les %ss l'emportent !", this.jeu.getTour()));
+        popupWindow.display();
+
     }
 
     public void marquerDeplacement(ArrayList<Case> listeDeplacementsPossibles) {
         for (Case c : listeDeplacementsPossibles) {
-            Pane pane = this.listePane.get(String.format("p%d%d", c.x, c.y));
-            pane.setStyle("-fx-background-color: yellow");
-            this.paintedCase.add(pane);
+            if (!c.equals(caseRoiEnEchec)) {
+                Pane pane = this.listePane.get(String.format("p%d%d", c.x, c.y));
+                pane.setStyle("-fx-background-color: yellow");
+                this.paintedCase.add(pane);
+            }
         }
     }
 
@@ -228,6 +274,15 @@ public class EchecApplication extends Application {
         } this.paintedCase.clear();
 
     }
+
+    public void marquerRoi(Case roi) {
+        this.listePane.get(String.format("p%d%d", roi.x, roi.y)).setStyle("-fx-background-color: #e85353");
+    }
+
+    public void demarquerRoi(Case roi) {
+        this.setOriginalStyle(String.format("p%d%d", roi.x, roi.y));
+    }
+
     public void setOriginalStyle(String id) {
         int x = Integer.parseInt(id.split("")[1]);
         int y = Integer.parseInt(id.split("")[2]);
