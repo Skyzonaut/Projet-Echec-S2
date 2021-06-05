@@ -7,6 +7,7 @@ public class Deplacement {
     private ArrayList<Case> deplacement;
 
     public Deplacement(Case origine, ArrayList<Case> deplacement) {
+        this.origine = origine;
         this.deplacement = deplacement;
     }
 
@@ -20,5 +21,14 @@ public class Deplacement {
 
     public ArrayList<Case> getDeplacement() {
         return deplacement;
+    }
+
+    public String toString() {
+        String str = "";
+        str += origine +"\n";
+        for (Case c : deplacement) {
+            str += "\t\t" + c + "\n";
+        }
+        return str;
     }
 }
