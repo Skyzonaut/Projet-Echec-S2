@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="Echec">
+    <output-path>$PROJECT_DIR$/out/artifacts/Echec</output-path>
+    <root id="archive" name="Echec.jar">
+      <element id="module-output" name="Projet-Echec-S2" />
+      <element id="library" level="application" name="json-simple-1.1.1" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/json-simple-1.1.1.jar" path-in-jar="/" />
+      <element id="library" level="project" name="javafx-sdk-11.0" />
+    </root>
+  </artifact>
+</component>
