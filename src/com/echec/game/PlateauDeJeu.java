@@ -186,6 +186,79 @@ public class PlateauDeJeu {
         return jsonObject;
     }
 
+
+    public ArrayList<Case> getCheminToRoi(Case origine, Case roi) {
+        ArrayList<Case> chemin = new ArrayList<>();
+        if (origine.piece.getClassePiece().equalsIgnoreCase("tour")) {
+            if (origine.y == roi.y) {
+                if (origine.x > roi.x) {
+                    for (int x = 1; x <= origine.x - roi.x; x++) {
+                        chemin.add(this.grille.getCase(origine.x - x, origine.y));
+                    }
+                } else {
+                    for (int x = 1; x <= roi.x - origine.x; x++) {
+                        chemin.add(this.grille.getCase(origine.x + x, origine.y));
+                    }
+                }
+            } else if (origine.x == roi.x) {
+                if (origine.y > roi.y) {
+                    for (int y = 1; y <= origine.y - roi.y; y++) {
+                        chemin.add(this.grille.getCase(origine.x, origine.y - y));
+                    }
+                } else {
+                    for (int y = 1; y <= roi.y - origine.y; y++) {
+                        chemin.add(this.grille.getCase(origine.x, origine.y - y));
+                    }
+                }
+            }
+        }
+        if (origine.piece.getClassePiece().equalsIgnoreCase("reine")) {
+            if (origine.y == roi.y) {
+                if (origine.x > roi.x) {
+                    for (int x = 1; x <= origine.x - roi.x; x++) {
+                        chemin.add(this.grille.getCase(origine.x - x, origine.y));
+                    }
+                } else {
+                    for (int x = 1; x <= roi.x - origine.x; x++) {
+                        chemin.add(this.grille.getCase(origine.x + x, origine.y));
+                    }
+                }
+            } else if (origine.x == roi.x) {
+                if (origine.y > roi.y) {
+                    for (int y = 1; y <= origine.y - roi.y; y++) {
+                        chemin.add(this.grille.getCase(origine.x, origine.y - y));
+                    }
+                } else {
+                    for (int y = 1; y <= roi.y - origine.y; y++) {
+                        chemin.add(this.grille.getCase(origine.x, origine.y - y));
+                    }
+                }
+            }
+            if (origine.x > roi.x && origine.y > roi.y) {
+                for (int i = 1; i <= origine.x - roi.x; i++) {
+                    chemin.add(this.grille.getCase(origine.x - i, origine.y - i));
+                }
+            }
+            if (origine.x > roi.x && origine.y < roi.y) {
+                for (int i = 1; i <= origine.x - roi.x; i++) {
+                    chemin.add(this.grille.getCase(origine.x - i, origine.y + i));
+                }
+            }
+            if (origine.x < roi.x && origine.y > roi.y) {
+                for (int i = 1; i <= roi.x - origine.x; i++) {
+                    chemin.add(this.grille.getCase(origine.x + i, origine.y - i));
+                }
+            }
+            if (origine.x < roi.x && origine.y < roi.y) {
+                for (int i = 1; i <= roi.x - origine.x; i++) {
+                    chemin.add(this.grille.getCase(origine.x + i, origine.y + i));
+                }
+            }
+        }
+        return chemin;
+    }
+
+
     /**
      * Fonction permettant d'avoir les déplacements possibles d'une piece
      * @param posPiece <code>{@linkplain Case}</code> : Case de la piece dont on veut avoir les déplacements
@@ -729,8 +802,9 @@ public class PlateauDeJeu {
     }
 
     public boolean detecterEchec2 (Piece pieceRoi, Case posRoi) {
+
         String couleurEnnemie = (pieceRoi.getCouleur() == "noir") ? "blanc" : "noir";
-        Echec echec = new Echec(this, posRoi);
+        Echec echec = new Echec(this, posRoi, pieceRoi.getCouleur());
         if (couleurEnnemie.equals("noir")) {
             for (Deplacement d : this.listeDeplacementNoirs) {
                 if (d.contains(posRoi)) {
