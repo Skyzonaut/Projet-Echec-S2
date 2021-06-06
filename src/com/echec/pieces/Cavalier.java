@@ -26,8 +26,7 @@ public class Cavalier extends Piece {
         this.etat = etat;
         this.pieceNoirUTF = "♞";
         this.pieceBlancheUTF = "♘";
-//        this.pieceNoirUTF = "♘";
-//        this.pieceBlancheUTF = "♞";
+        this.score = 3;
     }
 
     /**
@@ -44,6 +43,7 @@ public class Cavalier extends Piece {
         this.etat = (boolean) jsonObject.get("etat");
         this.pieceNoirUTF = "♘";
         this.pieceBlancheUTF = "♞";
+        this.score = 3;
     }
 
     /**

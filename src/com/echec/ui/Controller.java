@@ -1,20 +1,16 @@
 package com.echec.ui;
 
+import com.echec.game.Case;
 import com.echec.game.Jeu;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.MenuItem;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-import javax.swing.*;
 import java.util.Optional;
 
 public class Controller{
@@ -22,13 +18,30 @@ public class Controller{
     @FXML public MenuItem save;
     private EchecApplication echecApplication;
     private Jeu jeu;
-    private FileChooser.ExtensionFilter File;
     private Stage stage;
 
     public void initializeController(EchecApplication echecApplication, Jeu jeu, Stage stage) {
         this.echecApplication = echecApplication;
         this.jeu = jeu;
         this.stage = stage;
+    }
+
+    public Alert getDifficulteJeu() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, "Difficulté facile" + " ?", ButtonType.YES, ButtonType.NO);
+        alert.setTitle("DIFFICULTÉ");
+        alert.setHeaderText("Voulez vous jouer en difficulté facile ?");
+        alert.setContentText("La difficulté facile vous permet de revenir sur vos coups");
+        return alert;
+    }
+
+    public void selectionnerDifficulte() {
+        Alert alert = getDifficulteJeu();
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.YES){
+            this.echecApplication.getJeu().setNiveauDeDifficulte(2);
+        } else if (result.isPresent() && result.get() == ButtonType.NO) {
+            this.echecApplication.getJeu().setNiveauDeDifficulte(1);
+        }
     }
 
     public Alert confirmCancelDialog(String titre) {
@@ -44,7 +57,6 @@ public class Controller{
         Alert alert = confirmCancelDialog("Nouvelle partie");
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.YES){
-            System.out.println("paizeoiaze");
             this.menuItemSaveOnClick();
             this.jeu.plateau.init();
             this.echecApplication.reinitialize();
@@ -120,6 +132,22 @@ public class Controller{
     public void openHelp() {
         this.echecApplication.openBrowser();
         // https://www.youtube.com/watch?v=fKxG8KjH1Qg
+    }
+
+    public void undo() {
+        if (this.echecApplication.getJeu().getNiveauDeDifficulte() == 2) {
+            int lastEventClickIdX = this.echecApplication.uiHistorique.getUiEventByIndex(this.echecApplication.uiHistorique.getUiEvents().size()-2).getCaseOrigine().x;
+            int lastEventClickIdY = this.echecApplication.uiHistorique.getUiEventByIndex(this.echecApplication.uiHistorique.getUiEvents().size()-2).getCaseOrigine().y;
+            String lastEventClickId = String.format("v%d%d", lastEventClickIdX, lastEventClickIdY);
+            String targetClickId = this.echecApplication.uiHistorique.getLastUiEvent().getComponentOriginId();
+            this.echecApplication.getJeu().undo();
+            this.echecApplication.deplacerPieceUI(targetClickId, lastEventClickId);
+        }
+        else
+        {
+            PopupWindow popupWindow = new PopupWindow("Impossible de retourner en \narrière en mode difficile", 300, 150);
+            popupWindow.display();
+        }
     }
 
     @FXML

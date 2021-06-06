@@ -52,6 +52,12 @@ public abstract class Piece {
     protected String pieceBlancheUTF;
 
     /**
+     * Coùt de la pièce, sert à classer les pièces par valeur. Il servira à l'IA pour déterminer quelle pièce il vaut
+     * mieux prendre
+     */
+    protected int score;
+
+    /**
      * Getter retournant l'id de la pièce
      * @return {@linkplain Piece#id}
      * @author yohan
@@ -146,11 +152,6 @@ public abstract class Piece {
         return String.format("$[%s]", this.id);
     }
 
-//    public String toString() {
-//        return String.format("$[ Pièce : %-8s , Id : %-16s , Couleur : %-4s , Etat : %-4b , UTF : %s ]",
-//                this.getClassePiece(), this.id, this.couleur, this.etat, this.utfString());
-//    }
-
     /**
      * récupère la classe du pion, cette méthode étant héritée par les classes enfantes, elle permettra de récupérer
      * les classes précises de chaque pièce, et donc leur type.
@@ -190,4 +191,8 @@ public abstract class Piece {
         jsonObject.put("etat", this.etat);
         return jsonObject;
     }
+
+    public Integer getScore() {
+        return this.score;
+    };
 }

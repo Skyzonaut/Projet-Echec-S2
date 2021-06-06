@@ -4,10 +4,8 @@ import com.echec.Tools;
 import com.echec.pieces.Piece;
 import org.json.simple.JSONObject;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Random;
 
 public class PlateauDeJeu {
 
@@ -123,6 +121,10 @@ public class PlateauDeJeu {
         this.grille.initialiserGrille();
     }
 
+    public Echec getEchec() {
+        return  this.echec;
+    }
+
     public String deplacerPiece(Case origine, Case destination) {
         return deplacerPiece(origine, destination, true);
     }
@@ -135,7 +137,7 @@ public class PlateauDeJeu {
                     this.historique.addEvenement("Déplacement", origine, destination);
                 }
                 origine.vider();
-                this.updateListeDeplacements();
+                this.updateListeDeplacements(false);
                 return "ok";
             } else {
                 System.out.println("La destination n'est pas vide, veuillez utiliser la commande [prendre]");
@@ -230,10 +232,32 @@ public class PlateauDeJeu {
                     }
                 } else {
                     for (int y = 1; y <= roi.y - origine.y; y++) {
-                        chemin.add(this.grille.getCase(origine.x, origine.y - y));
+                        chemin.add(this.grille.getCase(origine.x, origine.y + y));
                     }
                 }
             }
+            if (origine.x > roi.x && origine.y > roi.y) {
+                for (int i = 1; i <= origine.x - roi.x; i++) {
+                    chemin.add(this.grille.getCase(origine.x - i, origine.y - i));
+                }
+            }
+            if (origine.x > roi.x && origine.y < roi.y) {
+                for (int i = 1; i <= origine.x - roi.x; i++) {
+                    chemin.add(this.grille.getCase(origine.x - i, origine.y + i));
+                }
+            }
+            if (origine.x < roi.x && origine.y > roi.y) {
+                for (int i = 1; i <= roi.x - origine.x; i++) {
+                    chemin.add(this.grille.getCase(origine.x + i, origine.y - i));
+                }
+            }
+            if (origine.x < roi.x && origine.y < roi.y) {
+                for (int i = 1; i <= roi.x - origine.x; i++) {
+                    chemin.add(this.grille.getCase(origine.x + i, origine.y + i));
+                }
+            }
+        }
+        if (origine.piece.getClassePiece().equalsIgnoreCase("fou")) {
             if (origine.x > roi.x && origine.y > roi.y) {
                 for (int i = 1; i <= origine.x - roi.x; i++) {
                     chemin.add(this.grille.getCase(origine.x - i, origine.y - i));
@@ -266,7 +290,431 @@ public class PlateauDeJeu {
      * @see Case
      * @author melissa
      */
+    public ArrayList<Case> deplacementsPossible (Case posPiece, boolean prevoirPrise, boolean continuer) {
+        ArrayList<Case> listeCases = new ArrayList<>();
+
+        int x = posPiece.x;
+        int y = posPiece.y;
+
+        String classePiece = grille.getCase(posPiece).piece.getClassePiece();
+
+        if (classePiece.equalsIgnoreCase("Pion"))
+        {
+            listeCases = getDeplacementsPossiblesPions(posPiece);
+        }
+        if (classePiece.equalsIgnoreCase("Tour"))
+        {
+            listeCases = getDeplacementsPossiblesTours(posPiece, prevoirPrise, continuer);
+        }
+        if (classePiece.equalsIgnoreCase("Reine"))
+        {
+            listeCases = getDeplacementsPossiblesReine(posPiece, prevoirPrise, continuer);
+        }
+        if (classePiece.equalsIgnoreCase("Fou"))
+        {
+            listeCases = getDeplacementsPossiblesFou(posPiece, prevoirPrise, continuer);
+        }
+        if (classePiece.equalsIgnoreCase("Cavalier"))
+        {
+            listeCases = getDeplacementsPossiblesCavaliers(posPiece);
+        }
+        if (classePiece.equalsIgnoreCase("Roi"))
+        {
+            listeCases = getDeplacementsPossiblesRoi(posPiece, prevoirPrise);
+        }
+        return listeCases;
+    }
+
     public ArrayList<Case> deplacementsPossible (Case posPiece) {
+        return deplacementsPossible(posPiece, false, false);
+    }
+
+    public ArrayList<Case> getDeplacementsPossiblesCavaliers(Case posPiece) {
+
+        ArrayList<Case> listeCases = new ArrayList<>();
+
+        int x = posPiece.x;
+        int y = posPiece.y;
+
+        if (x - 1 > 0 && y + 2 <= 8) {
+            if (grille.getCase(x - 1, y + 2).estVide()) {
+                listeCases.add(this.grille.getCase(x - 1, y + 2));
+            } else {
+                if (!grille.getCase(x - 1, y + 2).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(x - 1, y + 2));
+                }
+            }
+        }
+        if (x - 2 > 0 && y + 1 <= 8) {
+            if (grille.getCase(x - 2, y + 1).estVide()) {
+                listeCases.add(this.grille.getCase(x - 2, y + 1));
+            } else {
+                if (!grille.getCase(x - 2, y + 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(x - 2, y + 1));
+                }
+            }
+        }
+        if (x - 2 > 0 && y - 1 > 0) {
+            if (grille.getCase(x - 2, y - 1).estVide()) {
+                listeCases.add(this.grille.getCase(x - 2, y - 1));
+            } else {
+                if (!grille.getCase(x - 2, y - 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(x - 2, y - 1));
+                }
+            }
+        }
+        if (x - 1 > 0 && y - 2 > 0) {
+            if (grille.getCase(x - 1, y - 2).estVide()) {
+                listeCases.add(this.grille.getCase(x - 1, y - 2));
+            } else {
+                if (!grille.getCase(x - 1, y - 2).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(x - 1, y - 2));
+                }
+            }
+        }
+        if (x + 1 <= 8 && y - 2 > 0) {
+            if (grille.getCase(x + 1, y - 2).estVide()) {
+                listeCases.add(this.grille.getCase(x + 1, y - 2));
+            } else {
+                if (!grille.getCase(x + 1, y - 2).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(x + 1, y - 2));
+                }
+            }
+        }
+        if (x + 2 <= 8 && y - 1 > 0) {
+            if (grille.getCase(x + 2, y - 1).estVide()) {
+                listeCases.add(this.grille.getCase(x + 2, y - 1));
+            } else {
+                if (!grille.getCase(x + 2, y - 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(x + 2, y - 1));
+                }
+            }
+        }
+        if (x + 1 <= 8 && y + 2 <= 8) {
+            if (grille.getCase(x + 1, y + 2).estVide()) {
+                listeCases.add(this.grille.getCase(x + 1, y + 2));
+            } else {
+                if (!grille.getCase(x + 1, y + 2).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(x + 1, y + 2));
+                }
+            }
+        }
+        if (x + 2 <= 8 && y + 1 <= 8) {
+            if (grille.getCase(x + 2, y + 1).estVide()) {
+                listeCases.add(this.grille.getCase(x + 2, y + 1));
+            } else {
+                if (!grille.getCase(x + 2, y + 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(x + 2, y + 1));
+                }
+            }
+        }
+        return listeCases;
+    }
+
+    public ArrayList<Case> getDeplacementsPossiblesFou(Case posPiece, boolean prevoirPrise, boolean continuer) {
+
+        ArrayList<Case> listeCases = new ArrayList<>();
+
+        int x = posPiece.x;
+        int y = posPiece.y;
+
+        int a = x + 1;
+        int b = y + 1;
+        while (a <= 8 && b <= 8) {
+            if (grille.getCase(a, b).estVide()) {
+                listeCases.add(this.grille.getCase(a, b));
+            } else {
+                if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(a, b));
+                }
+                else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(a, b));
+                    }
+                }
+                if (!continuer) break;
+            }
+            a++;
+            b++;
+        }
+
+        a = x + 1;
+        b = y - 1;
+        while (a <= 8 && b > 0) {
+            if (grille.getCase(a, b).estVide()) {
+                listeCases.add(this.grille.getCase(a, b));
+            } else {
+                if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(a, b));
+                }
+                else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(a, b));
+                    }
+                }
+                if (!continuer) break;
+            }
+            a++;
+            b--;
+        }
+
+        a = x - 1;
+        b = y + 1;
+        while (a > 0 && b <= 8) {
+            if (grille.getCase(a, b).estVide()) {
+                listeCases.add(this.grille.getCase(a, b));
+            } else {
+                if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(a, b));
+                }
+                else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(a, b));
+                    }
+                }
+                if (!continuer) break;
+            }
+            a--;
+            b++;
+        }
+
+        a = x - 1;
+        b = y - 1;
+        while (a > 0 && b > 0) {
+            if (grille.getCase(a, b).estVide()) {
+                listeCases.add(this.grille.getCase(a, b));
+            } else {
+                if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(a, b));
+                }
+                else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(a, b));
+                    }
+                }
+                if (!continuer) break;
+            }
+            a--;
+            b--;
+
+        }
+        return listeCases;
+    }
+
+    public ArrayList<Case> getDeplacementsPossiblesReine(Case posPiece, boolean prevoirPrise, boolean continuer) {
+
+        ArrayList<Case> listeCases = new ArrayList<>();
+
+        int x = posPiece.x;
+        int y = posPiece.y;
+
+        for (int i = x - 1; i > 0; i--) {
+            if (grille.getCase(i, y).estVide()) {
+                listeCases.add(this.grille.getCase(i, y));
+            } else {
+                if (!grille.getCase(i, y).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(i, y));
+                } else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(i, y));
+                    }
+                }
+                if (!continuer) break;
+            }
+        }
+        for (int i = x + 1; i <= 8; i++) {
+            if (grille.getCase(i, y).estVide()) {
+                listeCases.add(this.grille.getCase(i, y));
+            } else {
+                if (!grille.getCase(i, y).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(i, y));
+                } else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(i, y));
+                    }
+                }
+                if (!continuer) break;
+            }
+        }
+        for (int i = y - 1; i > 0; i--) {
+            if (grille.getCase(x, i).estVide()) {
+                listeCases.add(this.grille.getCase(x, i));
+            } else {
+                if (!grille.getCase(x, i).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(x, i));
+                } else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(x, i));
+                    }
+                }
+                if (!continuer) break;
+            }
+        }
+        for (int i = y + 1; i <= 8; i++) {
+            if (grille.getCase(x, i).estVide()) {
+                listeCases.add(this.grille.getCase(x, i));
+            } else {
+                if (!grille.getCase(x, i).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(x, i));
+                } else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(x, i));
+                    }
+                }
+                if (!continuer) break;
+            }
+        }
+
+        int a = x + 1;
+        int b = y + 1;
+        while (a <= 8 && b <= 8) {
+            if (grille.getCase(a, b).estVide()) {
+                listeCases.add(this.grille.getCase(a, b));
+            } else {
+                if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(a, b));
+                } else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(a, b));
+                    }
+                }
+                if (!continuer) break;
+            }
+            a++;
+            b++;
+        }
+
+        a = x + 1;
+        b = y - 1;
+        while (a <= 8 && b > 0) {
+            if (grille.getCase(a, b).estVide()) {
+                listeCases.add(this.grille.getCase(a, b));
+            } else {
+                if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(a, b));
+                } else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(a, b));
+                    }
+                }
+                if (!continuer) break;
+            }
+            a++;
+            b--;
+        }
+
+        a = x - 1;
+        b = y + 1;
+        while (a > 0 && b <= 8) {
+            if (grille.getCase(a, b).estVide()) {
+                listeCases.add(this.grille.getCase(a, b));
+            } else {
+                if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(a, b));
+                } else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(a, b));
+                    }
+                }
+                if (!continuer) break;
+            }
+            a--;
+            b++;
+        }
+
+        a = x - 1;
+        b = y - 1;
+        while (a > 0 && b > 0) {
+            if (grille.getCase(a, b).estVide()) {
+                listeCases.add(this.grille.getCase(a, b));
+            } else {
+                if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(a, b));
+                } else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(a, b));
+                    }
+                }
+                if (!continuer) break;
+            }
+            a--;
+            b--;
+        }
+        return listeCases;
+    }
+
+    public ArrayList<Case> getDeplacementsPossiblesTours(Case posPiece, boolean prevoirPrise, boolean continuer) {
+
+        ArrayList<Case> listeCases = new ArrayList<>();
+
+        int x = posPiece.x;
+        int y = posPiece.y;
+
+        for (int i = x - 1; i > 0; i--) {
+            if (grille.getCase(i, y).estVide()) {
+                listeCases.add(this.grille.getCase(i, y));
+            } else {
+                if (!grille.getCase(i, y).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(i, y));
+                }
+                else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(i, y));
+                    }
+                }
+                if (!continuer) break;
+            }
+        }
+        for (int i = x + 1; i <= 8; i++) {
+            if (grille.getCase(i, y).estVide()) {
+                listeCases.add(this.grille.getCase(i, y));
+            } else {
+                if (!grille.getCase(i, y).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(i, y));
+                }
+                else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(i, y));
+                    }
+                }
+                if (!continuer) break;
+            }
+        }
+        for (int i = y - 1; i > 0; i--) {
+            if (grille.getCase(x, i).estVide()) {
+                listeCases.add(this.grille.getCase(x, i));
+            } else {
+                if (!grille.getCase(x, i).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(x, i));
+                }
+                else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(x, y));
+                    }
+                }
+                if (!continuer) break;
+            }
+        }
+        for (int i = y + 1; i <= 8; i++) {
+            if (grille.getCase(x, i).estVide()) {
+                listeCases.add(this.grille.getCase(x, i));
+            } else {
+                if (!grille.getCase(x, i).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    listeCases.add(this.grille.getCase(x, i));
+                }
+                else {
+                    if (prevoirPrise) {
+                        listeCases.add(this.grille.getCase(x, y));
+                    }
+                }
+                if (!continuer) break;
+            }
+        }
+        return listeCases;
+    }
+
+    public ArrayList<Case> getDeplacementsPossiblesPions(Case posPiece) {
+
         ArrayList<Case> listeCases = new ArrayList<>();
 
         int x = posPiece.x;
@@ -275,7 +723,7 @@ public class PlateauDeJeu {
         String classePiece = grille.getCase(posPiece).piece.getClassePiece();
         String couleurPiece = grille.getCase(posPiece).piece.getCouleur();
 
-        if (classePiece.equalsIgnoreCase("Pion")) {
+            if (classePiece.equalsIgnoreCase("Pion")) {
             if (couleurPiece.equalsIgnoreCase("Blanc")) {
                 if (x <= 8 && x > 0 && y + 1 <= 8) {
                     if (grille.getCase(x, y + 1).estVide()) {
@@ -329,395 +777,122 @@ public class PlateauDeJeu {
                 }
             }
         }
-        if (classePiece.equalsIgnoreCase("Tour")) {
-            for (int i = x - 1; i > 0; i--) {
-                if (grille.getCase(i, y).estVide()) {
-                    listeCases.add(this.grille.getCase(i, y));
-                } else {
-                    if (!grille.getCase(i, y).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(i, y));
-                    }
-                    break;
-                }
-            }
-            for (int i = x + 1; i <= 8; i++) {
-                if (grille.getCase(i, y).estVide()) {
-                    listeCases.add(this.grille.getCase(i, y));
-                } else {
-                    if (!grille.getCase(i, y).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(i, y));
-                    }
-                    break;
-                }
-            }
-            for (int i = y - 1; i > 0; i--) {
-                if (grille.getCase(x, i).estVide()) {
-                    listeCases.add(this.grille.getCase(x, i));
-                } else {
-                    if (!grille.getCase(x, i).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(x, i));
-                    }
-                    break;
-                }
-            }
-            for (int i = y + 1; i <= 8; i++) {
-                if (grille.getCase(x, i).estVide()) {
-                    listeCases.add(this.grille.getCase(x, i));
-                } else {
-                    if (!grille.getCase(x, i).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(x, i));
-                    }
-                    break;
-                }
-            }
-        }
+            return listeCases;
+    }
 
-        if (classePiece.equalsIgnoreCase("Reine")) {
-            for (int i = x - 1; i > 0; i--) {
-                if (grille.getCase(i, y).estVide()) {
-                    listeCases.add(this.grille.getCase(i, y));
-                } else {
-                    if (!grille.getCase(i, y).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(i, y));
-                    }
-                    break;
-                }
-            }
-            for (int i = x + 1; i <= 8; i++) {
-                if (grille.getCase(i, y).estVide()) {
-                    listeCases.add(this.grille.getCase(i, y));
-                } else {
-                    if (!grille.getCase(i, y).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(i, y));
-                    }
-                    break;
-                }
-            }
-            for (int i = y - 1; i > 0; i--) {
-                if (grille.getCase(x, i).estVide()) {
-                    listeCases.add(this.grille.getCase(x, i));
-                } else {
-                    if (!grille.getCase(x, i).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(x, i));
-                    }
-                    break;
-                }
-            }
-            for (int i = y + 1; i <= 8; i++) {
-                if (grille.getCase(x, i).estVide()) {
-                    listeCases.add(this.grille.getCase(x, i));
-                } else {
-                    if (!grille.getCase(x, i).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(x, i));
-                    }
-                    break;
-                }
-            }
+    public ArrayList<Case> getDeplacementsPossiblesRoi(Case posPiece, boolean prevoirPrise) {
 
-            int a = x + 1;
-            int b = y + 1;
-            while (a <= 8 && b <= 8) {
-                if (grille.getCase(a, b).estVide()) {
-                    listeCases.add(this.grille.getCase(a, b));
-                } else {
-                    if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(a, b));
-                    }
-                    break;
-                }
-                a++;
-                b++;
-            }
+        ArrayList<Case> listeCases = new ArrayList<>();
 
-            a = x + 1;
-            b = y - 1;
-            while (a <= 8 && b > 0) {
-                if (grille.getCase(a, b).estVide()) {
-                    listeCases.add(this.grille.getCase(a, b));
-                } else {
-                    if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(a, b));
-                    }
-                    break;
-                }
-                a++;
-                b--;
-            }
+        int x = posPiece.x;
+        int y = posPiece.y;
 
-            a = x - 1;
-            b = y + 1;
-            while (a > 0 && b <= 8) {
-                if (grille.getCase(a, b).estVide()) {
-                    listeCases.add(this.grille.getCase(a, b));
-                } else {
-                    if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(a, b));
-                    }
-                    break;
+        if (x + 1 <= 8 && y + 1 <= 8) {
+            if (grille.getCase(x + 1, y + 1).estVide()) {
+                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y + 1)).isEchec().equals("no-echec")) {
+                    listeCases.add(this.grille.getCase(x + 1, y + 1));
                 }
-                a--;
-                b++;
-            }
-
-            a = x - 1;
-            b = y - 1;
-            while (a > 0 && b > 0) {
-                if (grille.getCase(a, b).estVide()) {
-                    listeCases.add(this.grille.getCase(a, b));
-                } else {
-                    if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(a, b));
-                    }
-                    break;
-                }
-                a--;
-                b--;
-            }
-        }
-
-        if (classePiece.equalsIgnoreCase("Fou")) {
-            int a = x + 1;
-            int b = y + 1;
-            while (a <= 8 && b <= 8) {
-                if (grille.getCase(a, b).estVide()) {
-                    listeCases.add(this.grille.getCase(a, b));
-                } else {
-                    if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(a, b));
-                    }
-                    break;
-                }
-                a++;
-                b++;
-            }
-
-            a = x + 1;
-            b = y - 1;
-            while (a < 8 && b > 0) {
-                if (grille.getCase(a, b).estVide()) {
-                    listeCases.add(this.grille.getCase(a, b));
-                } else {
-                    if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(a, b));
-                    }
-                    break;
-                }
-                a++;
-                b--;
-            }
-
-            a = x - 1;
-            b = y + 1;
-            while (a > 0 && b < 8) {
-                if (grille.getCase(a, b).estVide()) {
-                    listeCases.add(this.grille.getCase(a, b));
-                } else {
-                    if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(a, b));
-                    }
-                    break;
-                }
-                a--;
-                b++;
-            }
-
-            a = x - 1;
-            b = y - 1;
-            while (a > 0 && b > 0) {
-                if (grille.getCase(a, b).estVide()) {
-                    listeCases.add(this.grille.getCase(a, b));
-                } else {
-                    if (!grille.getCase(a, b).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(a, b));
-                    }
-                    break;
-                }
-                a--;
-                b--;
-            }
-        }
-        if (classePiece.equalsIgnoreCase("Cavalier")) {
-            if (x - 1 > 0 && y + 2 <= 8) {
-                if (grille.getCase(x - 1, y + 2).estVide()) {
-                    listeCases.add(this.grille.getCase(x - 1, y + 2));
-                } else {
-                    if (!grille.getCase(x - 1, y + 2).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(x - 1, y + 2));
-                    }
-                }
-            }
-            if (x - 2 > 0 && y + 1 <= 8) {
-                if (grille.getCase(x - 2, y + 1).estVide()) {
-                    listeCases.add(this.grille.getCase(x - 2, y + 1));
-                } else {
-                    if (!grille.getCase(x - 2, y + 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(x - 2, y + 1));
-                    }
-                }
-            }
-            if (x - 2 > 0 && y - 1 > 0) {
-                if (grille.getCase(x - 2, y - 1).estVide()) {
-                    listeCases.add(this.grille.getCase(x - 2, y - 1));
-                } else {
-                    if (!grille.getCase(x - 2, y - 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(x - 2, y - 1));
-                    }
-                }
-            }
-            if (x - 1 > 0 && y - 2 > 0) {
-                if (grille.getCase(x - 1, y - 2).estVide()) {
-                    listeCases.add(this.grille.getCase(x - 1, y - 2));
-                } else {
-                    if (!grille.getCase(x - 1, y - 2).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(x - 1, y - 2));
-                    }
-                }
-            }
-            if (x + 1 <= 8 && y - 2 > 0) {
-                if (grille.getCase(x + 1, y - 2).estVide()) {
-                    listeCases.add(this.grille.getCase(x + 1, y - 2));
-                } else {
-                    if (!grille.getCase(x + 1, y - 2).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(x + 1, y - 2));
-                    }
-                }
-            }
-            if (x + 2 <= 8 && y - 1 > 0) {
-                if (grille.getCase(x + 2, y - 1).estVide()) {
-                    listeCases.add(this.grille.getCase(x + 2, y - 1));
-                } else {
-                    if (!grille.getCase(x + 2, y - 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(x + 2, y - 1));
-                    }
-                }
-            }
-            if (x + 1 <= 8 && y + 2 <= 8) {
-                if (grille.getCase(x + 1, y + 2).estVide()) {
-                    listeCases.add(this.grille.getCase(x + 1, y + 2));
-                } else {
-                    if (!grille.getCase(x + 1, y + 2).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(x + 1, y + 2));
-                    }
-                }
-            }
-            if (x + 2 <= 8 && y + 1 <= 8) {
-                if (grille.getCase(x + 2, y + 1).estVide()) {
-                    listeCases.add(this.grille.getCase(x + 2, y + 1));
-                } else {
-                    if (!grille.getCase(x + 2, y + 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        listeCases.add(this.grille.getCase(x + 2, y + 1));
-                    }
-                }
-            }
-        }
-        if (classePiece.equalsIgnoreCase("Roi")) {
-            if (x + 1 <= 8 && y + 1 <= 8) {
-                if (grille.getCase(x + 1, y + 1).estVide()) {
-                    if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y + 1))) {
+            } else {
+                if (!grille.getCase(x + 1, y + 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                   if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y + 1), true).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x + 1, y + 1));
                     }
-                } else {
-                    if (!grille.getCase(x + 1, y + 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y + 1))) {
-                            listeCases.add(this.grille.getCase(x + 1, y + 1));
-                        }
-                    }
                 }
             }
-            if (x - 1 > 0 && y + 1 <= 8) {
-                if (grille.getCase(x - 1, y + 1).estVide()) {
-                    if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y + 1))) {
+        }
+        if (x - 1 > 0 && y + 1 <= 8) {
+            if (grille.getCase(x - 1, y + 1).estVide()) {
+                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y + 1)).isEchec().equals("no-echec")) {
+                    listeCases.add(this.grille.getCase(x - 1, y + 1));
+                }
+            } else {
+                if (!grille.getCase(x - 1, y + 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y + 1)).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x - 1, y + 1));
                     }
-                } else {
-                    if (!grille.getCase(x - 1, y + 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y + 1))) {
-                            listeCases.add(this.grille.getCase(x - 1, y + 1));
-                        }
-                    }
                 }
             }
-            //x, y + 1
-            if (y + 1 <= 8) {
-                if (grille.getCase(x, y + 1).estVide()) {
-                    if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x, y + 1))) {
+        }
+        //x, y + 1
+        if (y + 1 <= 8) {
+            if (grille.getCase(x, y + 1).estVide()) {
+                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x, y + 1)).isEchec().equals("no-echec")) {
+                    listeCases.add(this.grille.getCase(x, y + 1));
+                }
+            } else {
+                if (!grille.getCase(x, y + 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x, y + 1)).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x, y + 1));
                     }
-                } else {
-                    if (!grille.getCase(x, y + 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x, y + 1))) {
-                            listeCases.add(this.grille.getCase(x, y + 1));
-                        }
-                    }
                 }
             }
-            //x, y - 1
-            if (y - 1 > 0) {
-                if (grille.getCase(x, y - 1).estVide()) {
-                    if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x, y - 1))) {
+        }
+        //x, y - 1
+        if (y - 1 > 0) {
+            if (grille.getCase(x, y - 1).estVide()) {
+                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x, y - 1)).isEchec().equals("no-echec")) {
+                    listeCases.add(this.grille.getCase(x, y - 1));
+                }
+            } else {
+                if (!grille.getCase(x, y - 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x, y - 1)).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x, y - 1));
                     }
-                } else {
-                    if (!grille.getCase(x, y - 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x, y - 1))) {
-                            listeCases.add(this.grille.getCase(x, y - 1));
-                        }
-                    }
                 }
             }
-            //x + 1, y
-            if (x + 1 <= 8) {
-                if (grille.getCase(x + 1, y).estVide()) {
-                    if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y))) {
+        }
+        //x + 1, y
+        if (x + 1 <= 8) {
+            if (grille.getCase(x + 1, y).estVide()) {
+                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y)).isEchec().equals("no-echec")) {
+                    listeCases.add(this.grille.getCase(x + 1, y));
+                }
+            } else {
+                if (!grille.getCase(x + 1, y).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y)).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x + 1, y));
                     }
-                } else {
-                    if (!grille.getCase(x + 1, y).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y))) {
-                            listeCases.add(this.grille.getCase(x + 1, y));
-                        }
-                    }
                 }
             }
-            //x - 1, y
-            if (x - 1 > 0 ) {
-                if (grille.getCase(x - 1, y).estVide()) {
-                    if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y))) {
+        }
+        //x - 1, y
+        if (x - 1 > 0 ) {
+            if (grille.getCase(x - 1, y).estVide()) {
+                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y)).isEchec().equals("no-echec")) {
+                    listeCases.add(this.grille.getCase(x - 1, y));
+                }
+            } else {
+                if (!grille.getCase(x - 1, y).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y)).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x - 1, y));
                     }
-                } else {
-                    if (!grille.getCase(x - 1, y).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y))) {
-                            listeCases.add(this.grille.getCase(x - 1, y));
-                        }
-                    }
                 }
             }
-            //x - 1, y - 1
-            if (x - 1 > 0 && y - 1 > 0) {
-                if (grille.getCase(x - 1, y - 1).estVide()) {
-                    if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y - 1))) {
+        }
+        //x - 1, y - 1
+        if (x - 1 > 0 && y - 1 > 0) {
+            if (grille.getCase(x - 1, y - 1).estVide()) {
+                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y - 1)).isEchec().equals("no-echec")) {
+                    listeCases.add(this.grille.getCase(x - 1, y - 1));
+                }
+            } else {
+                if (!grille.getCase(x - 1, y - 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y - 1)).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x - 1, y - 1));
                     }
-                } else {
-                    if (!grille.getCase(x - 1, y - 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y - 1))) {
-                            listeCases.add(this.grille.getCase(x - 1, y - 1));
-                        }
-                    }
                 }
             }
-            //x + 1, y - 1
-            if (x + 1 <= 8 && y - 1 > 0) {
-                if (grille.getCase(x + 1, y - 1).estVide()) {
-                    if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y - 1))) {
+        }
+        //x + 1, y - 1
+        if (x + 1 <= 8 && y - 1 > 0) {
+            if (grille.getCase(x + 1, y - 1).estVide()) {
+                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y - 1)).isEchec().equals("no-echec")) {
+                    listeCases.add(this.grille.getCase(x + 1, y - 1));
+                }
+            } else {
+                if (!grille.getCase(x + 1, y - 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
+                    if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y - 1)).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x + 1, y - 1));
-                    }
-                } else {
-                    if (!grille.getCase(x + 1, y - 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                        if (!detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y - 1))) {
-                            listeCases.add(this.grille.getCase(x + 1, y - 1));
-                        }
                     }
                 }
             }
@@ -725,744 +900,492 @@ public class PlateauDeJeu {
         return listeCases;
     }
 
-    public void updateListeDeplacements() {
-        ArrayList<Case> listeNoirs;
-        ArrayList<Case> listeBlancs;
-        ArrayList<Case> l = new ArrayList<>();
-        listeNoirs = this.grille.getListePieceCouleur("noir");
-        listeBlancs = this.grille.getListePieceCouleur("blanc");
+    public void updateListeDeplacements(Boolean pionAvanceOnly) {
+        listeDeplacementBlancs = this.generateListeDeplacementsBlancs(pionAvanceOnly, false, false);
+        listeDeplacementNoirs = this.generateListeDeplacementsNoirs(pionAvanceOnly, false, false);
+    }
 
-        for (Case c : listeNoirs) {
-            if (c.piece.getClassePiece().equalsIgnoreCase("pion")) {
-                l = new ArrayList<>();
-                l.add(this.grille.getCase(c.x + 1, c.y + 1));
-                l.add(this.grille.getCase(c.x - 1, c.y + 1));
-                this.listeDeplacementNoirs.add(new Deplacement(c, l));
-            } else if (c.piece.getClassePiece().equalsIgnoreCase("roi")) {
-
-                l = new ArrayList<>();
-                l.add(this.grille.getCase(c.x, c.y + 1));
-                l.add(this.grille.getCase(c.x, c.y - 1));
-                this.listeDeplacementNoirs.add(new Deplacement(c, l));
-
-                l = new ArrayList<>();
-                l.add(this.grille.getCase(c.x + 1, c.y + 1));
-                l.add(this.grille.getCase(c.x + 1, c.y ));
-                l.add(this.grille.getCase(c.x + 1, c.y - 1));
-                this.listeDeplacementNoirs.add(new Deplacement(c, l));
-
-                l = new ArrayList<>();
-                l.add(this.grille.getCase(c.x - 1, c.y + 1));
-                l.add(this.grille.getCase(c.x - 1, c.y));
-                l.add(this.grille.getCase(c.x - 1, c.y - 1));
-                this.listeDeplacementNoirs.add(new Deplacement(c, l));
-
-            } else {
-                l = new ArrayList<>();
-                for (Case d : this.deplacementsPossible(c)) {
-                    l.add(d);
-                }
-                this.listeDeplacementNoirs.add(new Deplacement(c, l));
-            }
-        }
+    public ArrayList<Deplacement> generateListeDeplacementsBlancs(Boolean pionAvanceOnly, Boolean prevoirPrise, Boolean continuer) {
+        ArrayList<Case> listeBlancs = this.grille.getListePieceCouleur("blanc");
+        ArrayList<Deplacement> listeDeplacementBlancs = new ArrayList<>();
+        ArrayList<Case> l;
 
         for (Case c : listeBlancs) {
             if (c.piece.getClassePiece().equalsIgnoreCase("pion")) {
                 l = new ArrayList<>();
-                l.add(this.grille.getCase(c.x + 1, c.y + 1));
-                l.add(this.grille.getCase(c.x - 1, c.y + 1));
-                this.listeDeplacementBlancs.add(new Deplacement(c, l));
+                if (pionAvanceOnly) {
+                    if (this.grille.getCase(c.x, c.y + 1).estVide()) {
+                        l.add(this.grille.getCase(c.x, c.y + 1));
+                    }
+                    if (this.grille.getCase(c.x, c.y + 2).estVide() && c.y == 2) {
+                        l.add(this.grille.getCase(c.x, c.y + 2));
+                    }
+                } else {
+                    if (c.x +1 <= 8 && c.y + 1 <= 8) {
+                        if (!this.grille.getCase(c.x + 1, c.y + 1).estVide()) {
+                            l.add(this.grille.getCase(c.x + 1, c.y + 1));
+                        }
+                    }
+                    if (c.x - 1 > 0 && c.y + 1 <= 8) {
+                        if (!this.grille.getCase(c.x - 1, c.y + 1).estVide()) {
+                            l.add(this.grille.getCase(c.x - 1, c.y + 1));
+                        }
+                    }
+                }
+                listeDeplacementBlancs.add(new Deplacement(c, l));
             } else if (c.piece.getClassePiece().equalsIgnoreCase("roi")) {
+                l = new ArrayList<>();
+                if (c.y + 1 <= 8) {
+                    if (!this.grille.getCase(c.x, c.y + 1).estVide()) {
+                        if (!this.grille.getCase(c.x, c.y + 1).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                            l.add(this.grille.getCase(c.x, c.y + 1));
+                        }
+                    } else l.add(this.grille.getCase(c.x, c.y + 1));
+                }
+                if (c.y - 1 > 0) {
+                    if (!this.grille.getCase(c.x, c.y - 1).estVide()) {
+                        if (!this.grille.getCase(c.x, c.y - 1).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                            l.add(this.grille.getCase(c.x, c.y - 1));
+                        }
+                    } else l.add(this.grille.getCase(c.x, c.y - 1));
+                }
+                listeDeplacementBlancs.add(new Deplacement(c, l));
 
                 l = new ArrayList<>();
-                l.add(this.grille.getCase(c.x, c.y + 1));
-                l.add(this.grille.getCase(c.x, c.y - 1));
-                this.listeDeplacementBlancs.add(new Deplacement(c, l));
+                if (c.x + 1 <= 8) {
+                    if (c.y + 1 <= 8) {
+                        if (!this.grille.getCase(c.x + 1, c.y + 1).estVide()) {
+                            if (!this.grille.getCase(c.x + 1, c.y + 1).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                                l.add(this.grille.getCase(c.x + 1, c.y + 1));
+                            }
+                        } else l.add(this.grille.getCase(c.x + 1, c.y + 1));;
+                    }
+                    if (c.y - 1 > 0) {
+                        if (!this.grille.getCase(c.x + 1, c.y - 1).estVide()) {
+                            if (!this.grille.getCase(c.x + 1, c.y - 1).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                                l.add(this.grille.getCase(c.x + 1, c.y - 1));
+                            }
+                        } else l.add(this.grille.getCase(c.x + 1, c.y - 1));
+                    }
+                    if (!this.grille.getCase(c.x + 1, c.y).estVide()) {
+                        if (!this.grille.getCase(c.x + 1, c.y).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                            l.add(this.grille.getCase(c.x + 1, c.y));
+                        }
+                    } else l.add(this.grille.getCase(c.x + 1, c.y));
+                }
+                listeDeplacementBlancs.add(new Deplacement(c, l));
 
                 l = new ArrayList<>();
-                l.add(this.grille.getCase(c.x + 1, c.y + 1));
-                l.add(this.grille.getCase(c.x + 1, c.y ));
-                l.add(this.grille.getCase(c.x + 1, c.y - 1));
-                this.listeDeplacementBlancs.add(new Deplacement(c, l));
-
-                l = new ArrayList<>();
-                l.add(this.grille.getCase(c.x - 1, c.y + 1));
-                l.add(this.grille.getCase(c.x - 1, c.y));
-                l.add(this.grille.getCase(c.x - 1, c.y - 1));
-                this.listeDeplacementBlancs.add(new Deplacement(c, l));
-
+                if (c.x - 1 > 0) {
+                    if (c.y + 1 <= 8) {
+                        if (!this.grille.getCase(c.x - 1, c.y + 1).estVide()) {
+                            if (!this.grille.getCase(c.x - 1, c.y + 1).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                                l.add(this.grille.getCase(c.x - 1, c.y + 1));
+                            }
+                        } else l.add(this.grille.getCase(c.x - 1, c.y + 1));
+                    }
+                    if (c.y - 1 > 0) {
+                        if (!this.grille.getCase(c.x - 1, c.y - 1).estVide()) {
+                            if (!this.grille.getCase(c.x - 1, c.y - 1).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                                l.add(this.grille.getCase(c.x - 1, c.y - 1));
+                            }
+                        } else l.add(this.grille.getCase(c.x - 1, c.y - 1));
+                    }
+                    if (!this.grille.getCase(c.x - 1, c.y).estVide()) {
+                        if (!this.grille.getCase(c.x - 1, c.y).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                            l.add(this.grille.getCase(c.x - 1, c.y));
+                        }
+                    } else l.add(this.grille.getCase(c.x - 1, c.y - 1));
+                }
+                listeDeplacementBlancs.add(new Deplacement(c, l));
             } else {
                 l = new ArrayList<>();
-                for (Case d : this.deplacementsPossible(c)) {
+                for (Case d : this.deplacementsPossible(c, false, continuer)) {
                     l.add(d);
                 }
-                this.listeDeplacementBlancs.add(new Deplacement(c, l));
+                listeDeplacementBlancs.add(new Deplacement(c, l));
             }
         }
+        ArrayList<Deplacement> temp = new ArrayList<>();
+        for (Deplacement d : listeDeplacementBlancs) {
+            if (d.hasDeplacement()) {
+                temp.add(d);
+            }
+        }
+        return temp;
     }
 
-    public boolean detecterEchec2 (Piece pieceRoi, Case posRoi) {
+    public ArrayList<Deplacement> generateListeDeplacementsNoirs(Boolean pionAvanceOnly, boolean prevoirPrise, boolean continuer) {
+        ArrayList<Case> listeNoirs;
+        ArrayList<Deplacement> listeDeplacementNoirs = new ArrayList<>();
+        ArrayList<Case> l;
+        listeNoirs = this.grille.getListePieceCouleur("noir");
+
+        for (Case c : listeNoirs) {
+            if (c.piece.getClassePiece().equalsIgnoreCase("pion")) {
+                l = new ArrayList<>();
+                if (pionAvanceOnly) {
+                    if (this.grille.getCase(c.x, c.y - 1).estVide()) {
+                        l.add(this.grille.getCase(c.x, c.y - 1));
+                    }
+                    if (this.grille.getCase(c.x, c.y - 2).estVide() && c.y == 7) {
+                        l.add(this.grille.getCase(c.x, c.y - 2));
+                    }
+                } else {
+                    if (c.x + 1 <= 8 && c.y - 1 > 0) {
+                        if (!this.grille.getCase(c.x + 1, c.y - 1).estVide()) {
+                            l.add(this.grille.getCase(c.x + 1, c.y - 1));
+                        }
+                    }
+                    if (c.x - 1 > 0 && c.y - 1 > 0) {
+                        if (!this.grille.getCase(c.x - 1, c.y - 1).estVide()) {
+                            l.add(this.grille.getCase(c.x - 1, c.y - 1));
+                        }
+                    }
+                }
+                listeDeplacementNoirs.add(new Deplacement(c, l));
+            } else if (c.piece.getClassePiece().equalsIgnoreCase("roi")) {
+                l = new ArrayList<>();
+                if (c.y + 1 <= 8) {
+                    if (this.grille.getCase(c.x, c.y + 1).estVide()) l.add(this.grille.getCase(c.x, c.y + 1));
+                }
+                if (c.y - 1 > 0) {
+                    if (this.grille.getCase(c.x, c.y - 1).estVide()) l.add(this.grille.getCase(c.x, c.y - 1));
+                }
+                listeDeplacementNoirs.add(new Deplacement(c, l));
+
+                l = new ArrayList<>();
+                if (c.x + 1 <= 8) {
+                    if (c.y + 1 <= 8) {
+                        if (this.grille.getCase(c.x + 1, c.y + 1).estVide()) l.add(this.grille.getCase(c.x + 1, c.y + 1));
+                    }
+                    if (c.y - 1 > 0) {
+                        if (this.grille.getCase(c.x + 1, c.y - 1).estVide()) l.add(this.grille.getCase(c.x + 1, c.y - 1));
+                    }
+                    if (this.grille.getCase(c.x + 1, c.y).estVide()) l.add(this.grille.getCase(c.x + 1, c.y));
+                }
+                listeDeplacementNoirs.add(new Deplacement(c, l));
+
+                l = new ArrayList<>();
+                if (c.x - 1 > 0) {
+                    if (c.y + 1 <= 8) {
+                        if (this.grille.getCase(c.x - 1, c.y + 1).estVide()) l.add(this.grille.getCase(c.x - 1, c.y + 1));
+                    }
+                    if (c.y - 1 > 0) {
+                        if (this.grille.getCase(c.x - 1, c.y - 1).estVide()) l.add(this.grille.getCase(c.x - 1, c.y - 1));
+                    }
+                    if (this.grille.getCase(c.x - 1, c.y).estVide()) l.add(this.grille.getCase(c.x - 1, c.y));
+                }
+                listeDeplacementNoirs.add(new Deplacement(c, l));
+            } else {
+                l = new ArrayList<>();
+                for (Case d : this.deplacementsPossible(c, prevoirPrise, continuer)) {
+                    l.add(d);
+                }
+                listeDeplacementNoirs.add(new Deplacement(c, l));
+            }
+        }
+        ArrayList<Deplacement> temp = new ArrayList<>();
+        for (Deplacement d : listeDeplacementNoirs) {
+            if (d.hasDeplacement()) {
+                temp.add(d);
+            }
+        }
+        return temp;
+    }
+
+    public Echec detecterEchec2 (Piece pieceRoi, Case posRoi) {
+        return detecterEchec2(pieceRoi, posRoi, false);
+    }
+
+    public Echec detecterEchec2 (Piece pieceRoi, Case posRoi, boolean prevoirPrise) {
 
         String couleurEnnemie = (pieceRoi.getCouleur() == "noir") ? "blanc" : "noir";
-        Echec echec = new Echec(this, posRoi, pieceRoi.getCouleur());
+        ArrayList<Deplacement> listeDeplacement = new ArrayList<>();
+
         if (couleurEnnemie.equals("noir")) {
-            for (Deplacement d : this.listeDeplacementNoirs) {
+            for (Deplacement d : generateListeDeplacementsNoirs(false, true, false)) {
                 if (d.contains(posRoi)) {
-                    echec.addAttaquant(d);
+                    listeDeplacement.add(d);
                 }
             }
         }
         if (couleurEnnemie.equals("blanc")) {
-            for (Deplacement d : this.listeDeplacementBlancs) {
+            for (Deplacement d : generateListeDeplacementsBlancs(false, true, false)) {
                 if (d.contains(posRoi)) {
-                    echec.addAttaquant(d);
+                    listeDeplacement.add(d);
                 }
             }
         }
-        echec.trouverSauveur();
+
+        Echec echec = new Echec(this, posRoi, pieceRoi.getCouleur(), listeDeplacement);
         this.echec = echec;
-        return echec.isEchec();
+        return echec;
     }
 
-    /**
-     * Fonction permettant de detecter les menaces directes sur le roi
-     * @param pieceRoi <code>{@linkplain Piece}</code> : La piece roi dont on veut vérifier l'existence d'un échec
-     * @param posRoi <code>{@linkplain Case}</code> : Case du roi dont on veut vérifier l'existence d'un échec
-     * @return <code>boolean</code> : true en cas d'échec
-     * @see Piece
-     * @see Case
-     * @author melissa
-     */
-    public boolean detecterEchec (Piece pieceRoi, Case posRoi){
-        int x = posRoi.x;
-        int y = posRoi.y;
+    public void IA() {
+        System.out.println("IA");
+        ArrayList<Integer> scores = new ArrayList<Integer>();
+        ArrayList<Case> casesOrigine = new ArrayList<>();
+        ArrayList<Case> casesDestination = new ArrayList<>();
 
-        int i;
-        int j;
+        ArrayList<Case> casesOrigine0 = new ArrayList<>();
+        ArrayList<Case> casesDestination0 = new ArrayList<>();
 
-//        int supX = posRoi.x + 1;
-//        int infX = posRoi.x - 1;
-//        int supY = posRoi.y + 1;
-//        int infY = posRoi.y - 1;
+        Case caseOrigine;
+        Case caseDestination;
 
-
-        int supX = x;
-        int infX = x;
-        int supY = y;
-        int infY = y;
-
-        String couleur = pieceRoi.getCouleur();
-
-        for (i = infX; i > 0; i--) {
-            if (grille.getCase(i, y).piece != null) {
-                if (!grille.getCase(i, y).piece.getCouleur().equalsIgnoreCase(couleur)) {
-                    if (grille.getCase(i, y).piece.getClassePiece().equalsIgnoreCase("Reine")
-                            || grille.getCase(i, y).piece.getClassePiece().equalsIgnoreCase("Tour")) {
-                        for (j = infX; j > i; j++) {
-                            if (grille.getCase(j, y).piece != null) {
-                                return false;
+        for (int i = 1 ; i <= 8 ; i++) {
+            for (int j = 1; j <= 8 ; j++) {
+                if (grille.getCase(i, j).piece != null) {
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_1")) {
+                        ArrayList<Case> deplacementsPion1 = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsPion1.size() ; a++) {
+                            if (deplacementsPion1.get(a).piece != null) {
+                                scores.add(deplacementsPion1.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsPion1.get(a)));
+                            }
+                            if (deplacementsPion1.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsPion1.get(a)));
                             }
                         }
-                        return true;
                     }
-                }
-            } else i--;
-        }
-        for (i = supX; i <= 8; i++) {
-            if (grille.getCase(i, y).piece != null) {
-                if (!grille.getCase(i, y).piece.getCouleur().equalsIgnoreCase(couleur)) {
-                    if (grille.getCase(i, y).piece.getClassePiece().equalsIgnoreCase("Reine") || grille.getCase(i, y).piece.getClassePiece().equalsIgnoreCase("Tour")) {
-                        for (j = supX; j < i; j++) {
-                            if (grille.getCase(j, y).piece != null) {
-                                return false;
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_2")) {
+                        ArrayList<Case> deplacementsPion2 = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsPion2.size() ; a++) {
+                            if (deplacementsPion2.get(a).piece != null) {
+                                scores.add(deplacementsPion2.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsPion2.get(a)));
+                            }
+                            if (deplacementsPion2.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsPion2.get(a)));
                             }
                         }
-                        return true;
                     }
-                }
-            } else i++;
-        }
-        for (i = infY; i > 0; i--) {
-            if (grille.getCase(x, i).piece != null) {
-                if (!grille.getCase(x, i).piece.getCouleur().equalsIgnoreCase(couleur)) {
-                    if (grille.getCase(x, i).piece.getClassePiece().equalsIgnoreCase("Reine") || grille.getCase(x, i).piece.getClassePiece().equalsIgnoreCase("Tour")) {
-                        for (j = infY; j > i; j++) {
-                            if (grille.getCase(x, j).piece != null) {
-                                return false;
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_3")) {
+                        ArrayList<Case> deplacementsPion3 = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsPion3.size() ; a++) {
+                            if (deplacementsPion3.get(a).piece != null) {
+                                scores.add(deplacementsPion3.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsPion3.get(a)));
+                            }
+                            if (deplacementsPion3.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsPion3.get(a)));
                             }
                         }
-                        return true;
                     }
-                }
-            } else i--;
-        }
-        for (i = supY; i <= 8; i++) {
-            if (grille.getCase(x, i).piece != null) {
-                if (!grille.getCase(x, i).piece.getCouleur().equalsIgnoreCase(couleur)) {
-                    if (grille.getCase(x, i).piece.getClassePiece().equalsIgnoreCase("Reine") || grille.getCase(x, i).piece.getClassePiece().equalsIgnoreCase("Tour")) {
-                        for (j = supY; j < i; j++) {
-                            if (grille.getCase(x, j).piece != null) {
-                                return false;
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_4")) {
+                        ArrayList<Case> deplacementsPion4 = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsPion4.size() ; a++) {
+                            if (deplacementsPion4.get(a).piece != null) {
+                                scores.add(deplacementsPion4.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsPion4.get(a)));
+                            }
+                            if (deplacementsPion4.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsPion4.get(a)));
                             }
                         }
-                        return true;
                     }
-                }
-            }
-        }
-
-        i = supX;
-        j = supY;
-        while (i <= 8 && j <= 8) {
-            if (grille.getCase(i, j).piece != null) {
-                if (!grille.getCase(i, j).piece.getCouleur().equalsIgnoreCase(couleur)) {
-                    if (grille.getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Reine") || grille.getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Fou")) {
-                        int a = supX;
-                        int b = supY;
-                        while (a < i && b < j) {
-                            if (grille.getCase(a, b).piece != null)
-                                return false;
-                            a++;
-                            b++;
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_5")) {
+                        ArrayList<Case> deplacementsPion5 = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsPion5.size() ; a++) {
+                            if (deplacementsPion5.get(a).piece != null) {
+                                scores.add(deplacementsPion5.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsPion5.get(a)));
+                            }
+                            if (deplacementsPion5.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsPion5.get(a)));
+                            }
+                        }
+                    }
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_6")) {
+                        ArrayList<Case> deplacementsPion6 = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsPion6.size() ; a++) {
+                            if (deplacementsPion6.get(a).piece != null) {
+                                scores.add(deplacementsPion6.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsPion6.get(a)));
+                            }
+                            if (deplacementsPion6.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsPion6.get(a)));
+                            }
+                        }
+                    }
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_7")) {
+                        ArrayList<Case> deplacementsPion7 = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsPion7.size() ; a++) {
+                            if (deplacementsPion7.get(a).piece != null) {
+                                scores.add(deplacementsPion7.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsPion7.get(a)));
+                            }
+                            if (deplacementsPion7.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsPion7.get(a)));
+                            }
+                        }
+                    }
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_8")) {
+                        ArrayList<Case> deplacementsPion8 = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsPion8.size() ; a++) {
+                            if (deplacementsPion8.get(a).piece != null) {
+                                scores.add(deplacementsPion8.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsPion8.get(a)));
+                            }
+                            if (deplacementsPion8.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsPion8.get(a)));
+                            }
+                        }
+                    }
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Cavalier_noir_1")) {
+                        ArrayList<Case> deplacementsCavalier1 = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsCavalier1.size() ; a++) {
+                            if (deplacementsCavalier1.get(a).piece != null) {
+                                scores.add(deplacementsCavalier1.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsCavalier1.get(a)));
+                            }
+                            if (deplacementsCavalier1.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsCavalier1.get(a)));
+                            }
+                        }
+                    }
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Cavalier_noir_2")) {
+                        ArrayList<Case> deplacementsCavalier2 = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsCavalier2.size() ; a++) {
+                            if (deplacementsCavalier2.get(a).piece != null) {
+                                scores.add(deplacementsCavalier2.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsCavalier2.get(a)));
+                            }
+                            if (deplacementsCavalier2.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsCavalier2.get(a)));
+                            }
+                        }
+                    }
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Fou_noir_1")) {
+                        ArrayList<Case> deplacementsFou1 = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsFou1.size() ; a++) {
+                            if (deplacementsFou1.get(a).piece != null) {
+                                scores.add(deplacementsFou1.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsFou1.get(a)));
+                            }
+                            if (deplacementsFou1.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsFou1.get(a)));
+                            }
+                        }
+                    }
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Fou_noir_2")) {
+                        ArrayList<Case> deplacementsFou2 = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsFou2.size() ; a++) {
+                            if (deplacementsFou2.get(a).piece != null) {
+                                scores.add(deplacementsFou2.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsFou2.get(a)));
+                            }
+                            if (deplacementsFou2.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsFou2.get(a)));
+                            }
+                        }
+                    }
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Tour_noir_1")) {
+                        ArrayList<Case> deplacementsTour1 = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsTour1.size() ; a++) {
+                            if (deplacementsTour1.get(a).piece != null) {
+                                scores.add(deplacementsTour1.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsTour1.get(a)));
+                            }
+                            if (deplacementsTour1.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsTour1.get(a)));
+                            }
+                        }
+                    }
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Tour_noir_2")) {
+                        ArrayList<Case> deplacementsTour2 = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsTour2.size() ; a++) {
+                            if (deplacementsTour2.get(a).piece != null) {
+                                scores.add(deplacementsTour2.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsTour2.get(a)));
+                            }
+                            if (deplacementsTour2.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsTour2.get(a)));
+                            }
+                        }
+                    }
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Reine_noir_1")) {
+                        ArrayList<Case> deplacementsReine = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsReine.size() ; a++) {
+                            if (deplacementsReine.get(a).piece != null) {
+                                scores.add(deplacementsReine.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsReine.get(a)));
+                            }
+                            if (deplacementsReine.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsReine.get(a)));
+                            }
+                        }
+                    }
+                    if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Roi_noir_1")) {
+                        ArrayList<Case> deplacementsRoi = deplacementsPossible(grille.getCase(i, j));
+                        for (int a = 0 ; a < deplacementsRoi.size() ; a++) {
+                            if (deplacementsRoi.get(a).piece != null) {
+                                scores.add(deplacementsRoi.get(a).piece.getScore());
+                                casesOrigine.add(grille.getCase(i, j));
+                                casesDestination.add(grille.getCase(deplacementsRoi.get(a)));
+                            }
+                            if (deplacementsRoi.get(a).piece == null) {
+                                casesOrigine0.add(grille.getCase(i, j));
+                                casesDestination0.add(grille.getCase(deplacementsRoi.get(a)));
+                            }
                         }
                     }
                 }
-            } else i++; j++;
-        }
 
-        i = infX;
-        j = supY;
-        while (i > 0 && j <= 8) {
-            if (grille.getCase(i, j).piece != null) {
-                if (!grille.getCase(i, j).piece.getCouleur().equalsIgnoreCase(couleur)) {
-                    if (grille.getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Reine") || grille.getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Fou")) {
-                        int a = infX;
-                        int b = supY;
-                        while (a > i && b < j) {
-                            if (grille.getCase(a, b).piece != null)
-                                return false;
-                            a--;
-                            b++;
-                        }
-                    }
-                }
-            } j++; i--;
-        }
-
-        i = supX;
-        j = infY;
-        while (i <= 8 && j > 0) {
-            if (grille.getCase(i, j).piece != null) {
-                if (!grille.getCase(i, j).piece.getCouleur().equalsIgnoreCase(couleur)) {
-                    if (grille.getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Reine") || grille.getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Fou")) {
-                        int a = supX;
-                        int b = infY;
-                        while (a < i && b > j) {
-                            if (grille.getCase(a, b).piece != null)
-                                return false;
-                            a++;
-                            b--;
-                        }
-                    }
-                }
-            } j--; i++;
-        }
-
-        i = infX;
-        j = infY;
-        while (i > 0 && j > 0) {
-            if (grille.getCase(i, j).piece != null) {
-                if (!grille.getCase(i, j).piece.getCouleur().equalsIgnoreCase(couleur)) {
-                    if (grille.getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Reine") || grille.getCase(i, j).piece.getClassePiece().equalsIgnoreCase("Fou")) {
-                        int a = infX;
-                        int b = infY;
-                        while (a > i && b > j) {
-                            if (grille.getCase(i, j).piece != null)
-                                return false;
-                            a--;
-                            b--;
-                        }
-                    }
-                }
-            } j--; i--;
-        }
-
-        if (x - 1 > 0 && y + 2 <= 8) {
-            if (grille.getCase(x - 1, y + 2).piece != null) {
-                if (grille.getCase(x - 1, y + 2).piece.getClassePiece().equalsIgnoreCase("Cavalier")
-                        && !grille.getCase(x - 1, y + 2).piece.getCouleur().equalsIgnoreCase(couleur))
-                    return true;
-            }
-        }
-        if (x - 2 > 0 && y + 1 <= 8) {
-            if (grille.getCase(x - 2, y + 1).piece != null) {
-                if (grille.getCase(x - 2, y + 1).piece.getClassePiece().equalsIgnoreCase("Cavalier")
-                        && !grille.getCase(x - 2, y + 1).piece.getCouleur().equalsIgnoreCase(couleur))
-                    return true;
-            }
-        }
-        if (x - 2 > 0 && y - 1 > 0) {
-            if (grille.getCase(x - 2, y - 1).piece != null) {
-                if (grille.getCase(x - 2, y - 1).piece.getClassePiece().equalsIgnoreCase("Cavalier")
-                        && !grille.getCase(x - 1, y + 2).piece.getCouleur().equalsIgnoreCase(couleur))
-                    return true;
-            }
-        }
-        if (x - 1 > 0 && y - 2 > 0) {
-            if (grille.getCase(x - 1, y - 2).piece != null) {
-                if (grille.getCase(x - 1, y - 2).piece.getClassePiece().equalsIgnoreCase("Cavalier")
-                        && !grille.getCase(x - 1, y - 2).piece.getCouleur().equalsIgnoreCase(couleur))
-                    return true;
-            }
-        }
-        if (x + 1 <= 8 && y - 2 > 0) {
-            if (grille.getCase(x + 1, y - 2).piece != null) {
-                if (grille.getCase(x + 1, y - 2).piece.getClassePiece().equalsIgnoreCase("Cavalier")
-                        && !grille.getCase(x + 1, y - 2).piece.getCouleur().equalsIgnoreCase(couleur))
-                    return true;
-            }
-        }
-        if (x + 2 <= 8 && y - 1 > 0) {
-            if (grille.getCase(x + 2, y - 1).piece != null) {
-                if (grille.getCase(x + 2, y - 1).piece.getClassePiece().equalsIgnoreCase("Cavalier")
-                        && !grille.getCase(x + 2, y - 1).piece.getCouleur().equalsIgnoreCase(couleur))
-                    return true;
-            }
-        }
-        if (x + 1 <= 8 && y + 2 <= 8) {
-            if (grille.getCase(x + 1, y + 2).piece != null) {
-                if (grille.getCase(x + 1, y + 2).piece.getClassePiece().equalsIgnoreCase("Cavalier")
-                        && !grille.getCase(x + 1, y + 2).piece.getCouleur().equalsIgnoreCase(couleur))
-                    return true;
-            }
-        }
-        if (x + 2 <= 8 && y + 1 <= 8) {
-            if (grille.getCase(x + 2, y + 1).piece != null) {
-                if (grille.getCase(x + 2, y + 1).piece.getClassePiece().equalsIgnoreCase("Cavalier")
-                        && !grille.getCase(x + 2, y + 1).piece.getCouleur().equalsIgnoreCase(couleur))
-                    return true;
             }
         }
 
-        if (couleur.equalsIgnoreCase("Noir")) {
-            if (grille.getCase(x-1, y-1).piece != null) {
-                if ((grille.getCase(x-1, y-1).piece.getClassePiece().equalsIgnoreCase("Pion")
-                        && grille.getCase(x-1, y-1).piece.getClassePiece().equalsIgnoreCase("Blanc")))
-                    return true;
+        if (scores.isEmpty()) {
+            Random rand = new Random();
+            int index = rand.nextInt(casesOrigine0.size());
+            caseOrigine = casesOrigine0.get(index);
+            caseDestination = casesDestination0.get(index);
+            deplacerPiece(caseOrigine, caseDestination);
+        } else {
+            Integer maxScore = scores.get(0);
+            for (int i = 1 ; i < scores.size() ; i++) {
+                if (scores.get(i) > maxScore) maxScore = scores.get(i);
             }
-            if (grille.getCase(x+1, y-1).piece != null) {
-                if (grille.getCase(x+1, y-1).piece.getClassePiece().equalsIgnoreCase("Pion")
-                        && (grille.getCase(x+1, y-1).piece.getCouleur().equalsIgnoreCase("Blanc")))
-                    return true;
-            }
+            int index = scores.indexOf(maxScore);
+            caseOrigine = casesOrigine.get(index);
+            caseDestination = casesDestination.get(index);
+            prendrePiece(caseOrigine, caseDestination);
         }
-        if (couleur.equalsIgnoreCase("Blanc")) {
-
-            if (grille.getCase(x+1, y+1).piece != null) {
-                if ((grille.getCase(x+1, y+1).piece.getClassePiece().equalsIgnoreCase("Pion")
-                        && grille.getCase(x+1, y+1).piece.getClassePiece().equalsIgnoreCase("Noir")))
-                    return true;
-            }
-
-            if (grille.getCase(x-1, y+1).piece != null) {
-                if (grille.getCase(x-1, y+1).piece.getClassePiece().equalsIgnoreCase("Pion")
-                        && (grille.getCase(x-1, y+1).piece.getCouleur().equalsIgnoreCase("Noir")))
-                    return true;
-            }
-        }
-
-        String couleurEnnemie = (pieceRoi.getCouleur() == "noir") ? "blanc" : "noir";
-
-        if (couleur.equalsIgnoreCase(couleurEnnemie)) {
-            if (grille.getCase(x, infY).piece != null) {
-                if (grille.getCase(x, infY).piece.getClassePiece().equalsIgnoreCase("Roi")
-                        && grille.getCase(x, infY).piece.getCouleur().equalsIgnoreCase(couleurEnnemie))
-                    return true;
-            }
-            if (grille.getCase(x, supY).piece != null) {
-                if (grille.getCase(x, supY).piece.getClassePiece().equalsIgnoreCase("Roi")
-                        && grille.getCase(x, supY).piece.getCouleur().equalsIgnoreCase(couleurEnnemie))
-                    return true;
-            }
-            if (grille.getCase(infX, y).piece != null) {
-                if (grille.getCase(infX, y).piece.getClassePiece().equalsIgnoreCase("Roi")
-                        && grille.getCase(infX, y).piece.getCouleur().equalsIgnoreCase(couleurEnnemie))
-                    return true;
-            }
-            if (grille.getCase(supX, y).piece != null) {
-                if (grille.getCase(supX, y).piece.getClassePiece().equalsIgnoreCase("Roi")
-                        && grille.getCase(supX, y).piece.getCouleur().equalsIgnoreCase(couleurEnnemie))
-                    return true;
-            }
-            if (grille.getCase(infX, supY).piece != null) {
-                if (grille.getCase(infX, supY).piece.getClassePiece().equalsIgnoreCase("Roi")
-                        && grille.getCase(infX, supY).piece.getCouleur().equalsIgnoreCase(couleurEnnemie))
-                    return true;
-            }
-            if (grille.getCase(supX, supY).piece != null) {
-                if (grille.getCase(supX, supY).piece.getClassePiece().equalsIgnoreCase("Roi")
-                        && grille.getCase(supX, supY).piece.getCouleur().equalsIgnoreCase(couleurEnnemie))
-                    return true;
-            }
-        }
-
-//        if (couleur.equalsIgnoreCase("Blanc")) {
-//            if (grille.getCase(x, infY).piece.getClassePiece().equalsIgnoreCase("Roi")
-//                    && grille.getCase(x, infY).piece.getCouleur().equalsIgnoreCase("Noir"))
-//                return true;
-//            if (grille.getCase(x, supY).piece.getClassePiece().equalsIgnoreCase("Noir")
-//                    && grille.getCase(x, supY).piece.getCouleur().equalsIgnoreCase("Noir"))
-//                return true;
-//            if (grille.getCase(infX, y).piece.getClassePiece().equalsIgnoreCase("Roi")
-//                    && grille.getCase(infX, y).piece.getCouleur().equalsIgnoreCase("Noir"))
-//                return true;
-//            if (grille.getCase(supX, y).piece.getClassePiece().equalsIgnoreCase("Roi")
-//                    && grille.getCase(supX, y).piece.getCouleur().equalsIgnoreCase("Noir"))
-//                return true;
-//            if (grille.getCase(infX, supY).piece.getClassePiece().equalsIgnoreCase("Roi")
-//                    && grille.getCase(infX, supY).piece.getCouleur().equalsIgnoreCase("Noir"))
-//                return true;
-//            if (grille.getCase(supX, supY).piece.getClassePiece().equalsIgnoreCase("Roi")
-//                    && grille.getCase(supX, supY).piece.getCouleur().equalsIgnoreCase("Noir"))
-//                return true;
-//        }
-
-        return false;
     }
 
-    /**
-     * Fonction permettant de vérifier l'existence de collisions entre les pieces en cas de déplacement
-     * @param origin <code>{@linkplain Case}</code> : Case originale de la piece qu'on veut déplacer
-     * @param destination <code>{@linkplain Case}</code> : Case de la destination où on veut déplacer la piece
-     * @return <code>boolean</code> : true en cas de collision possible
-     * @see Case
-     * @author melissa
-     */
-    public boolean testerCollisions (Case origin, Case destination){
-        int x = origin.x;
-        int y = origin.y;
-        int dx = destination.x;
-        int dy = destination.y;
-        int i;
-        int j;
+    public void IAEchec() {
 
-        String classeOrigin = origin.piece.getClassePiece();
-        String couleur = origin.piece.getCouleur();
-
-        if (classeOrigin.equalsIgnoreCase("Reine")) {
-            if (Math.abs(dx - x) == Math.abs(dy - y)) {
-                if (dy > y && dx > x) {
-                    i = x + 1;
-                    j = y + 1;
-                    while (i < dx && j < dy) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        i++;
-                        j++;
-                    }
-                }
-                if (dy < y && dx < x) {
-                    i = x - 1;
-                    j = y - 1;
-                    while (dx < i && dy < j) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        i--;
-                        j--;
-                    }
-                }
-                if (dy > y && dx < x) {
-                    i = x - 1;
-                    j = y + 1;
-                    while (dx < i && j < dy) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        j++;
-                        i--;
-                    }
-                }
-                if (dy < y && dx > x) {
-                    i = x + 1;
-                    j = y - 1;
-                    while (i < dx && dy > j) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        j--;
-                        i++;
-                    }
-                }
-            }
-            if (dx == x) {
-                if (dy > y) {
-                    i = x;
-                    j = y + 1;
-                    while (j < dy) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        j++;
-                    }
-                }
-                if (dy < y) {
-                    i = x;
-                    j = y - 1;
-                    while (dy < j) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        j--;
-                    }
-                }
-            }
-            if (dy == y) {
-                if (dx > x) {
-                    i = x + 1;
-                    j = y;
-                    while (i < dx) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        i++;
-                    }
-                }
-                if (dx < x) {
-                    i = x - 1;
-                    j = y - 1;
-                    while (dx < i) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        j--;
-                    }
-                }
-            }
-        }
-        if (classeOrigin.equalsIgnoreCase("Tour")) {
-            if (dx == x) {
-                if (dy > y) {
-                    i = x;
-                    j = y + 1;
-                    while (j < dy) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        j++;
-                    }
-                }
-                if (dy < y) {
-                    i = x;
-                    j = y - 1;
-                    while (dy < j) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        j--;
-                    }
-                }
-            }
-            if (dy == y) {
-                if (dx > x) {
-                    i = x + 1;
-                    j = y;
-                    while (i < dx) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        i++;
-                    }
-                }
-                if (dx < x) {
-                    i = x - 1;
-                    j = y - 1;
-                    while (dx < i) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        j--;
-                    }
-                }
-            }
-        }
-        if (classeOrigin.equalsIgnoreCase("Fou")) {
-            if (Math.abs(dx - x) == Math.abs(dy - y)) {
-                if (dy > y && dx > x) {
-                    i = x + 1;
-                    j = y + 1;
-                    while (i < dx && j < dy) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        i++;
-                        j++;
-                    }
-                }
-                if (dy < y && dx < x) {
-                    i = x - 1;
-                    j = y - 1;
-                    while (dx < i && dy < j) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        i--;
-                        j--;
-                    }
-                }
-                if (dy > y && dx < x) {
-                    i = x - 1;
-                    j = y + 1;
-                    while (dx < i && j < dy) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        j++;
-                        i--;
-                    }
-                }
-                if (dy < y && dx > x) {
-                    i = x + 1;
-                    j = y - 1;
-                    while (i < dx && dy > j) {
-                        if (grille.getCase(i, j).piece != null) {
-                            return false;
-                        }
-                        j--;
-                        i++;
-                    }
-                }
-            }
-        }
-        if (classeOrigin.equalsIgnoreCase("Roi")) {
-            if (grille.getCase(destination).piece == null
-                    || (grille.getCase(destination).piece != null
-                    && !grille.getCase(destination).piece.getCouleur().equalsIgnoreCase(couleur)
-                    && !grille.getCase(destination).piece.getClassePiece().equalsIgnoreCase("Roi"))) {
-                if (!detecterEchec(grille.getCase(origin).piece, grille.getCase(destination)))
-                    return true;
-                else return false;
-            }
-
-        }
-        if (classeOrigin.equalsIgnoreCase("Pion")) {
-            if (couleur.equalsIgnoreCase("Blanc")) {
-                if (dy == y + 1 && grille.getCase(x, y + 1).piece == null) {
-                    return true;
-                }
-                if (dy == y + 2 && y == 2 && grille.getCase(x, y + 2).piece == null) {
-                    return true;
-                }
-                if (dy == y + 1 && (dx == x + 1 || dx == x - 1) && !(grille.getCase(x, y + 1).piece == null)) {
-                    return true;
-                }
-            }
-            if (couleur.equalsIgnoreCase("Noir")) {
-                if (dy == y - 1 && grille.getCase(x, y - 1).piece == null) {
-                    return true;
-                }
-                if (dy == y - 2 && y == 7 && grille.getCase(x, y - 2).piece == null) {
-                    return true;
-                }
-                if (dy == y - 1 && (dx == x + 1 || dx == x - 1) && !(grille.getCase(x, y - 1).piece == null)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        return true;
-    }
-
-
-    /**
-     * Fonction permettant de vérifier la légalité des déplacements
-     *
-     * @param origin      <code>{@linkplain Case}</code> : Case originale de la piece qu'on veut déplacer
-     * @param destination <code>{@linkplain Case}</code> : Case de la destination où on veut déplacer la piece
-     * @return <code>boolean</code> : true quand le déplacement est légal
-     * @author melissa
-     * @see Case
-     */
-    public boolean testerDeplacement(Case origin, Case destination) {
-        int x = origin.x;
-        int y = origin.y;
-
-        int dx = destination.x;
-        int dy = destination.y;
-
-        String classe = origin.piece.getClassePiece();
-        String couleur = origin.piece.getCouleur();
-
-        if (classe.equalsIgnoreCase("Reine")) {
-            if (dx - x == dy - y) {
-                if (Math.abs(dx - x) == Math.abs(dy - y)) {
-                    return true;
-                }
-                if (dx == x) {
-                    return true;
-                }
-                if (dy == y) {
-                    return true;
-                }
-                return false;
-            }
-            if (classe.equalsIgnoreCase("Tour")) {
-                if (dx == x) {
-                    return true;
-                }
-                if (dy == y) {
-                    return true;
-                }
-                return false;
-            }
-            if (classe.equalsIgnoreCase("Fou")) {
-                if (dx - x == dy - y) {
-                    if (Math.abs(dx - x) == Math.abs(dy - y)) {
-                        return true;
-                    }
-                    return false;
-                }
-                if (classe.equalsIgnoreCase("Cavalier")) {
-                    if (((dx == x + 2) || (dx == x - 2)) && ((dy == y + 1) || (dy == y - 1))) {
-                        return true;
-                    }
-                    if (((dx == x + 1) || (dx == x - 1)) && ((dy == y + 2) || (dy == y - 2))) {
-                        return true;
-                    }
-                    return false;
-                }
-                if (classe.equalsIgnoreCase("Roi")) {
-                    if (dx == x && (dy == y - 1 || dy == y + 1)) {
-                        return true;
-                    }
-                    if ((dx == x - 1 || dx == x + 1) && (dy == y - 1 || dy == y + 1)) {
-                        return true;
-                    }
-                    return false;
-                }
-                if (classe.equalsIgnoreCase("Pion")) {
-                    if (couleur.equalsIgnoreCase("Blanc")) {
-                        if (dy == y + 1) {
-                            return true;
-                        }
-                        if (dy == y + 2 && y == 2) {
-                            return true;
-                        }
-                    }
-                    if (couleur.equalsIgnoreCase("Noir")) {
-                        if (dy == y - 1) {
-                            return true;
-                        }
-                        if (dy == y - 2 && y == 7) {
-                            return true;
-                        }
-                    }
-
-                }
-                return false;
-            }
-        }
-        return false;
     }
 }

@@ -9,10 +9,20 @@ import javafx.stage.*;
 
 public class PopupWindow {
     private String contenu;
+    private int x;
+    private int y;
 
     public PopupWindow(String contenu) {
         this.contenu = contenu;
+        this.x = 250;
+        this.y = 150;
     }
+    public PopupWindow(String contenu, int x, int y) {
+        this.contenu = contenu;
+        this.x = x;
+        this.y = y;
+    }
+
 
     public void display()
     {
@@ -31,7 +41,7 @@ public class PopupWindow {
         layout.getChildren().addAll(label1, button1);
         layout.setAlignment(Pos.CENTER);
 
-        Scene scene1= new Scene(layout, 250, 150);
+        Scene scene1= new Scene(layout, x, y);
         popupwindow.setScene(scene1);
         popupwindow.showAndWait();
 

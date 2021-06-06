@@ -23,10 +23,14 @@ public class Jeu {
     public static final List<String> listeDesCommandes = Arrays.asList(arrayDesCommandes);
     public static final List<String> listeDesCommandesRaccourci = Arrays.asList(arrayDesCommandesRaccourci);
     private String tour = "blanc";
+
+    /**
+     * 1 : difficile
+     * 2 : facile
+     */
     private int niveauDeDifficulte;
     private static FileWriter fw;
     private Boolean jeuEnCours = true;
-
 
     public Jeu() {
         this.plateau = new PlateauDeJeu();
@@ -442,4 +446,14 @@ public class Jeu {
             return parsedSaveName;
         } else return fileName;
     }
+
+    public void setNiveauDeDifficulte(int niveauDeDifficulte) {
+        this.niveauDeDifficulte = niveauDeDifficulte;
+    }
+
+    public int getNiveauDeDifficulte() {
+        return niveauDeDifficulte;
+    }
+
+
 }

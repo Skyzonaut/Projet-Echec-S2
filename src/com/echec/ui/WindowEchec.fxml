@@ -26,6 +26,7 @@
           <Menu mnemonicParsing="false" text="Help">
             <items>
               <MenuItem id="menuItemHelp" fx:id="menuItemHelp" mnemonicParsing="false" onAction="#openHelp" text="Help" />
+                  <MenuItem id="undo" fx:id="undo" mnemonicParsing="false" onAction="#undo" text="Undo" />
             </items>
           </Menu>
         </menus>

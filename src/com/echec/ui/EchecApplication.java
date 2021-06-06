@@ -1,9 +1,6 @@
 package com.echec.ui;
 
-import com.echec.game.Case;
-import com.echec.game.Evenement;
-import com.echec.game.Historique;
-import com.echec.game.Jeu;
+import com.echec.game.*;
 import com.echec.pieces.Piece;
 import javafx.application.Application;
 import javafx.beans.property.SimpleObjectProperty;
@@ -11,7 +8,6 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
@@ -19,9 +15,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.stage.Popup;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
 import java.net.URL;
 import java.util.*;
@@ -29,7 +23,7 @@ import java.util.*;
 public class EchecApplication extends Application {
 
     private Jeu jeu;
-    private UiHistorique uiHistorique;
+    public UiHistorique uiHistorique;
     private FXMLLoader loader;
     private final HashMap<String, Pane> listePane = new HashMap<>();
     private final TreeMap<String, ImageView> listeImageView = new TreeMap<>();
@@ -37,8 +31,11 @@ public class EchecApplication extends Application {
     private Controller controller;
     private Stage primaryStage;
     private Label labelTour;
-    private ArrayList<Pane> paintedCase = new ArrayList<Pane>();
+    private ArrayList<Pane> paintedPane = new ArrayList<Pane>();
+    private ArrayList<Pane> paintedPaneSauveur = new ArrayList<Pane>();
+    private Pane paintedPaneRoi;
     private ArrayList<Case> listeDeplacementsPossibles;
+    private ArrayList<Case> sauveurs = new ArrayList<>();
     private Case caseRoiEnEchec;
 
     @Override
@@ -57,10 +54,10 @@ public class EchecApplication extends Application {
         initializeHistoriqueTable();
         initializeController();
 
+        controller.selectionnerDifficulte();
 
         Scene scene = new Scene(root);
         scene.getStylesheets().add("com/echec/stylesheets/style.css");
-
 
         labelTour = (Label) loader.getNamespace().get("labelTour");
         primaryStage.setOnCloseRequest(event -> controller.confirmOnQuit(event));
@@ -148,11 +145,18 @@ public class EchecApplication extends Application {
         initializeController();
         this.jeu.setTour("blanc");
         setLabelTour();
+        resetMarquagesDeplacements();
+        resetMarquagesSauveurs();
+        resetMarquagesRoi();
+        this.listeDeplacementsPossibles.clear();
+        this.sauveurs.clear();
+        this.caseRoiEnEchec = null;
     }
 
     public void onClick(MouseEvent mouseEvent) {
 
         ImageView targetImgView = (ImageView) mouseEvent.getTarget();
+        String retour = "";
 
         int x = Integer.parseInt(targetImgView.getId().split("")[1]);
         int y = Integer.parseInt(targetImgView.getId().split("")[2]);
@@ -168,7 +172,6 @@ public class EchecApplication extends Application {
 
                     if (this.listeDeplacementsPossibles.contains(targetClickCase))
                     {
-                        String retour;
                         if (targetClickCase.piece == null)
                         {
                             retour = this.jeu.plateau.deplacerPiece(lastEventClickCase, targetClickCase);
@@ -181,7 +184,7 @@ public class EchecApplication extends Application {
                         if (retour.equals("ok"))
                         {
                             Case caseRoi = this.jeu.plateau.getGrille().getRoi(targetClickCase.piece.getCouleur());
-                            if (this.jeu.plateau.detecterEchec2(caseRoi.piece, caseRoi))
+                            if (this.jeu.plateau.detecterEchec2(caseRoi.piece, caseRoi).equals("echec"))
                             {
                                 PopupWindow popupWindow = new PopupWindow("Déplacement impossible,\n il mettrait le roi en echec");
                                 popupWindow.display();
@@ -197,43 +200,40 @@ public class EchecApplication extends Application {
                                 this.setLabelTour();
                             }
                         }
-                        String couleurEnnemie = targetClickCase.piece.getCouleur().equals("noir") ? "blanc" : "noir";
-                        caseRoiEnEchec = this.jeu.plateau.getGrille().getRoi(couleurEnnemie);
-                        if (this.jeu.plateau.detecterEchec2(caseRoiEnEchec.piece, caseRoiEnEchec))
-                        {
-                            this.marquerRoi(caseRoiEnEchec);
-                            this.jeu.plateau.setEnEchec(true);
-                            listeDeplacementsPossibles = this.jeu.plateau.deplacementsPossible(caseRoiEnEchec);
-
-                            if (this.jeu.plateau.isEnEchec() && listeDeplacementsPossibles.size() == 0)
-                            {
-                                this.perdu();
-                            }
-                        }
-                        else
-                        {
-                            this.jeu.plateau.setEnEchec(false);
-                        }
+                        Echec(targetClickCase);
                     }
                     else
                     {
                         System.out.println("Ce déplacement n'est pas autorisé");
                     }
-//                } else {
-//                    System.out.println("Ce n'est pas à votre tour");
-//                }
             }
             else
             {
                 System.out.println("Vous n'avez sélectionné aucune pièces");
             }
-            resetMarquageDeplacement();
-            this.setOriginalStyle(this.uiHistorique.getLastUiEvent().getComponentOriginId());
+
+            resetMarquagesDeplacements();
+
+            // Si le pion sélectionné est un sauveur, on ne remet pas sa couleur par défaut pour qu'il reste
+            // visible. Sa couleur sera reset quand il n'y aura plus d'échec
+            String idOriginalClic = this.uiHistorique.getLastUiEvent().getComponentOriginId();
+            Case c = this.jeu.plateau.getGrille().getCase(
+                    Integer.parseInt(idOriginalClic.split("")[1]),
+                    Integer.parseInt(idOriginalClic.split("")[2]));
+
+            if (!this.sauveurs.contains(c)) {
+                setOriginalStyle(this.uiHistorique.getLastUiEvent().getComponentOriginId());
+            }
+
+            if (retour.equals("ok")) {
+                IA();
+            }
+
         }
         else
         {
             if (this.jeu.plateau.isEnEchec()) {
-                if (targetClickCase.equals(this.caseRoiEnEchec)) {
+                if (targetClickCase.equals(this.caseRoiEnEchec) || this.sauveurs.contains(targetClickCase)) {
                     listeDeplacementsPossibles = this.jeu.plateau.deplacementsPossible(targetClickCase);
                     marquerDeplacement(listeDeplacementsPossibles);
                 }
@@ -252,8 +252,70 @@ public class EchecApplication extends Application {
         uiHistorique.clicked();
     }
 
-    public void perdu() {
-        PopupWindow popupWindow = new PopupWindow(String.format("Les %ss l'emportent !", this.jeu.getTour()));
+    public void Echec(Case targetClickCase) {
+        String couleurEnnemie = targetClickCase.piece.getCouleur().equals("noir") ? "blanc" : "noir";
+        caseRoiEnEchec = this.jeu.plateau.getGrille().getRoi(couleurEnnemie);
+
+        // On regarde si le coup a mis le roi en echec
+        Echec retourEchec = this.jeu.plateau.detecterEchec2(caseRoiEnEchec.piece, caseRoiEnEchec);
+
+        // Si la pièce est en échec et  que le roi peut bouger
+        if (retourEchec.isEchec().equals("echec"))
+        {
+            // On affiche la case du roi en Rouge
+            this.marquerRoi(caseRoiEnEchec);
+
+            // On met le plateau en echec
+            this.jeu.plateau.setEnEchec(true);
+
+            // On récré la liste des sauveurs
+            this.sauveurs.clear();
+
+            // Si il y en a, on stocke les sauveurs
+            if (retourEchec.hasSauveurs()) {
+                for (Deplacement d : retourEchec.getSauveur()) {
+                    this.sauveurs.add(d.getOrigine());
+                }
+            }
+
+            // Et on les mets en bleu pour que le joueur puisse connaître ses possibilités
+            // de coups
+            marquerSauveur(this.sauveurs);
+        }
+        else if (this.jeu.plateau.isEnEchec() && retourEchec.isEchec().equals("no-echec"))
+        {
+            this.jeu.plateau.setEnEchec(false);
+            resetMarquagesSauveurs();
+            resetMarquagesRoi();
+        }
+        else if (retourEchec.isEchec().equals("mat"))
+        {
+            this.perdu(targetClickCase.piece.getCouleur());
+        }
+    }
+
+    public void IA() {
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(this.caseRoiEnEchec.couleur);
+//        for (Case c : this.jeu.g)
+        this.jeu.plateau.IA();
+        int originIdX = this.jeu.plateau.historique.getDernierEvenement().getCaseOrigine().x;
+        int originIdY = this.jeu.plateau.historique.getDernierEvenement().getCaseOrigine().y;
+        String origineId = String.format("v%d%d", originIdX, originIdY);
+
+        int destinationIdX = this.jeu.plateau.historique.getDernierEvenement().getCaseDestination().x;
+        int destinationIdY = this.jeu.plateau.historique.getDernierEvenement().getCaseDestination().y;
+        String destinationId = String.format("v%d%d", destinationIdX, destinationIdY);
+
+        this.deplacerPieceUI(origineId, destinationId);
+        this.jeu.setTour("blanc");
+    }
+    public void perdu(String couleur) {
+        PopupWindow popupWindow = new PopupWindow(String.format("Les %ss l'emportent !", couleur));
         popupWindow.display();
 
     }
@@ -263,25 +325,48 @@ public class EchecApplication extends Application {
             if (!c.equals(caseRoiEnEchec)) {
                 Pane pane = this.listePane.get(String.format("p%d%d", c.x, c.y));
                 pane.setStyle("-fx-background-color: yellow");
-                this.paintedCase.add(pane);
+                this.paintedPane.add(pane);
             }
         }
     }
 
-    public void resetMarquageDeplacement() {
-        for (Pane pane : this.paintedCase) {
-            this.setOriginalStyle(pane.getId());
-        } this.paintedCase.clear();
-
+    public void marquerSauveur(ArrayList<Case> sauveurs) {
+        for (Case c : sauveurs) {
+            if (!c.equals(caseRoiEnEchec)) {
+                Pane pane = this.listePane.get(String.format("p%d%d", c.x, c.y));
+                pane.setStyle("-fx-background-color: #406dcb");
+                this.paintedPaneSauveur.add(pane);
+            }
+        }
     }
 
     public void marquerRoi(Case roi) {
-        this.listePane.get(String.format("p%d%d", roi.x, roi.y)).setStyle("-fx-background-color: #e85353");
+        this.paintedPaneRoi = this.listePane.get(String.format("p%d%d", roi.x, roi.y));
+        this.paintedPaneRoi.setStyle("-fx-background-color: #e85353");
     }
 
-    public void demarquerRoi(Case roi) {
-        this.setOriginalStyle(String.format("p%d%d", roi.x, roi.y));
+    public void resetMarquagesDeplacements() {
+        for (Pane pane : this.paintedPane) {
+                this.setOriginalStyle(pane.getId());
+        } this.paintedPane.clear();
     }
+
+    public void resetMarquagesSauveurs() {
+        for (Pane pane : this.paintedPaneSauveur) {
+            this.setOriginalStyle(pane.getId());
+        } this.paintedPaneSauveur.clear();
+    }
+
+    public void resetMarquagesRoi() {
+        if (this.paintedPaneRoi != null) {
+            this.setOriginalStyle(this.paintedPaneRoi.getId());
+        }
+    }
+
+
+//    public void demarquerRoi(Case roi) {
+//        this.setOriginalStyle(String.format("p%d%d", roi.x, roi.y));
+//    }
 
     public void setOriginalStyle(String id) {
         int x = Integer.parseInt(id.split("")[1]);
@@ -298,7 +383,10 @@ public class EchecApplication extends Application {
         Image image = this.listeImageView.get(originId).getImage();
         this.listeImageView.get(targetId).setImage(image);
         this.listeImageView.get(originId).setImage(null);
-//        this.jeu.plateau.historique.afficher();
+    }
+
+    public Jeu getJeu() {
+        return jeu;
     }
 
     public void initializeHistoriqueTable() {

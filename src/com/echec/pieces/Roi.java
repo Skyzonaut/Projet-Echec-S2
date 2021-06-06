@@ -26,6 +26,7 @@ public class Roi extends Piece {
         this.etat = etat;
         this.pieceNoirUTF = "♔";
         this.pieceBlancheUTF = "♚";
+        this.score = 10;
     }
     
     /**
@@ -42,8 +43,7 @@ public class Roi extends Piece {
         this.etat = (boolean) jsonObject.get("etat");
         this.pieceNoirUTF = "♚";
         this.pieceBlancheUTF = "♔";
-//        this.pieceNoirUTF = "♔";
-//        this.pieceBlancheUTF = "♚";
+        this.score = 10;
     }
 
     /**

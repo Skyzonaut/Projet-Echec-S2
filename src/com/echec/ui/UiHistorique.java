@@ -25,6 +25,14 @@ public class UiHistorique {
         this.uiEvents.add(new UiEvent(componentOrigin, caseOrigin, this.alreadyClicked));
     }
 
+    public UiEvent getUiEventByIndex(int i) {
+        return this.uiEvents.get(i);
+    }
+
+    public ArrayList<UiEvent> getUiEvents() {
+        return uiEvents;
+    }
+
     public void afficher() {
         System.out.println("[UiHistorique]" + "-".repeat(60));
         for (UiEvent uiEvent : this.uiEvents) {
