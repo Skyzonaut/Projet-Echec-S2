@@ -2,27 +2,70 @@ package com.echec.game;
 
 import com.echec.Tools;
 import com.echec.pieces.Piece;
+import com.echec.ui.EchecApplication;
 import org.json.simple.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class PlateauDeJeu {
 
+    /**
+     * Identifiant du plateau de Jeu
+     */
     private String id;
+
+    /**
+     * Grille contenant les cases et les pièces
+     */
     private Grille grille;
+
+    /**
+     * Historique attitré à ce plateau contenant la liste des évènements
+     */
     public Historique historique = new Historique();
+
+    /**
+     * Liste des déplacements des noirs, et qui sera mise à jour à chaque coup et mouvement
+     */
     public ArrayList<Deplacement> listeDeplacementNoirs = new ArrayList<>();
+
+    /**
+     * Liste des déplacements des blancs, et qui sera mise à jour à chaque coup et mouvement
+     */
     public ArrayList<Deplacement> listeDeplacementBlancs = new ArrayList<>();
+
+    /**
+     * Variable précisant si le plateau est en echec
+     */
     private boolean enEchec = false;
+
+    /**
+     * Echec contenant les attaquants, sauveurs du roi et le roi lors d'un echec
+     */
     private Echec echec;
 
+    /**
+     * Variable précisant si l'IA est en echec
+     */
+    private boolean IAEnEchec = false;
+
+    /**
+     * Constructeur par défaut du plateau.
+     * <p>Par défaut son id est concaténé avec sa date et heure de création</p>
+     */
     public PlateauDeJeu() {
         this.id = "plateau " + Tools.getFormatDate();
         this.grille = new Grille();
         this.initGrille();
     }
 
+    /**
+     * Constructeur par chargement d'un object JSON
+     * @param jsonObject Object Json servant de sauvegarde à un précédant Jeu
+     * @see PlateauDeJeu#getJSONObject()
+     */
     public PlateauDeJeu(JSONObject jsonObject) {
         this.id = (String) jsonObject.get("id");
         this.grille = new Grille((JSONObject) jsonObject.get("grille"));
@@ -30,6 +73,10 @@ public class PlateauDeJeu {
         this.enEchec = (Boolean) jsonObject.get("enEchec");
     }
 
+    /**
+     * Fonction simulant la création d'un nouveau plateau
+     * @see PlateauDeJeu
+     */
     public void init() {
         this.id = "plateau " + Tools.getFormatDate();
         this.grille = new Grille();
@@ -37,18 +84,38 @@ public class PlateauDeJeu {
         this.initGrille();
     }
 
+    /**
+     * Fonction affichant le plateau au format texte sous la forme d'un échiquier dans la console
+     * @param hauteur hauteur des cases
+     * @param largeur largeur des cases
+     */
     public void afficher(int hauteur, int largeur) {
         System.out.println(this.toString(hauteur, largeur));
     }
 
+    /**
+     * Fonction affichant le plateau au format texte sous la forme d'un échiquier dans la console
+     */
     public void afficher() {
         this.afficher(2, 5);
     }
 
+    /**
+     * Réécriture de la fonction {@linkplain Object#toString()}, en retournant cette fois ci l'échiquier sous un
+     * format texte dans la console
+     * @return le plateau au format texte
+     */
+
     public String toString() {
         return this.toString(2, 5);
     }
-
+    /**
+     * Réécriture de la fonction {@linkplain Object#toString()}, en retournant cette fois ci l'échiquier sous un
+     * format texte dans la console
+     * @param hauteur hauteur des cases
+     * @param largeur largeur des cases
+     * @return le plateau au format texte
+     */
     public String toString(int hauteur, int largeur) {
 
         StringBuilder dessinPlateau = new StringBuilder(" ");
@@ -113,72 +180,159 @@ public class PlateauDeJeu {
         return dessinPlateau.toString();
     }
 
+    /**
+     * Getter de {@linkplain PlateauDeJeu#grille}
+     * @return {@linkplain PlateauDeJeu#grille}
+     */
     public Grille getGrille() {
         return this.grille;
     }
 
+    /**
+     * Fonction réinitialisant la grille de ce plateau
+     * @see Grille#initialiserGrille()
+     */
     public void initGrille() {
         this.grille.initialiserGrille();
     }
 
+    /**
+     * Getter de {@linkplain PlateauDeJeu#echec}
+     * @return {@linkplain PlateauDeJeu#echec}
+     */
     public Echec getEchec() {
         return  this.echec;
     }
 
+    /**
+     * Fonction déplaçant dans la grille un pion vers une case vide
+     * @param origine Case du pion d'origine du coup
+     * @param destination  Case de destination du pion d'origine du coup
+     * @return <code>String</code> chaîne de validation
+     * @see EchecApplication#deplacerPieceUI(String, String)
+     * @author yohan
+     */
     public String deplacerPiece(Case origine, Case destination) {
         return deplacerPiece(origine, destination, true);
     }
 
+    /**
+     * Fonction déplaçant dans la grille un pion vers une case vide
+     * @param origine Case du pion d'origine du coup
+     * @param destination  Case de destination du pion d'origine du coup
+     * @param updateHistorique Boolean si l'on souhaite ou non rajouter ce mouvement dans l'historique
+     * @return <code>String</code> chaîne de validation
+     * @see EchecApplication#deplacerPieceUI(String, String)
+     * @author yohan
+     */
     public String deplacerPiece(Case origine, Case destination, boolean updateHistorique) {
-        if (!origine.estVide()) {
-            if (destination.estVide()) {
+
+        // Si la case de destination est vide et que l'origine non plus
+        if (!origine.estVide())
+        {
+            if (destination.estVide())
+            {
+                // On met ce qui est dans l'origine dans la destination
                 destination.piece = origine.piece;
-                if (updateHistorique) {
+
+                // Si on souhaite mettre à jour l'historique avec ce déplacement on ajoute l'évènement
+                if (updateHistorique)
+                {
                     this.historique.addEvenement("Déplacement", origine, destination);
                 }
+
+                // On vide l'origine
                 origine.vider();
                 this.updateListeDeplacements(false);
                 return "ok";
-            } else {
+            }
+            else
+            {
                 System.out.println("La destination n'est pas vide, veuillez utiliser la commande [prendre]");
                 return "nok";
+
             }
-        } else {
+        }
+        else
+        {
             System.out.println("L'origine est vide!");
             return "nok";
         }
-    }
 
+    }
+    /**
+     * Fonction prenant un pion par un autre
+     * @param origine Case du pion d'origine du coup
+     * @param destination  Case de destination du pion d'origine du coup
+     * @return <code>String</code> chaîne de validation
+     * @see EchecApplication#deplacerPieceUI(String, String)
+     * @see PlateauDeJeu#deplacerPiece(Case, Case)
+     * @author yohan
+     */
     public String prendrePiece(Case origine, Case destination) {
-        if (!destination.estVide()) {
+
+        // Si la destination comporte bel et bien une piece
+        if (!destination.estVide())
+        {
+            // On désactive cette pièce
             destination.piece.setEtat(false);
+
+            // On ajoute l'évènement
             this.historique.addEvenement("Prise", origine, destination);
+
+            // On vide la case de la pièce prise
             destination.vider();
+
+            // Et on y met la pièce qui l'a prise
             deplacerPiece(origine, destination, false);
             return "ok";
-        } else {
+        }
+        else
+        {
             System.out.println("La destination est pas vide, veuillez utiliser la commande [déplacer]");
             return "nok";
         }
     }
 
-
+    /**
+     * Setter de {@linkplain PlateauDeJeu#id}
+     * @param value {@linkplain PlateauDeJeu#id}
+     */
     public void setId(String value) {
         this.id = value;
     }
 
+    /**
+     * Getter de {@linkplain PlateauDeJeu#id}
+     * @return {@linkplain PlateauDeJeu#id}
+     */
     public String getId() {
         return this.id;
     }
 
+    /**
+     * Getter vérifiant si le plateau est en echec
+     * @return {@linkplain PlateauDeJeu#enEchec}
+     */
     public boolean isEnEchec() {
         return enEchec;
     }
 
+    /**
+     * Setter de {@linkplain PlateauDeJeu#enEchec}
+     * @return {@linkplain PlateauDeJeu#enEchec}
+     */
     public void setEnEchec(boolean enEchec) {
         this.enEchec = enEchec;
     }
 
+    /**
+     * Fonction retournant le plateau et ce qui le compose au format JSON
+     * @return la sauvegarde au format JSON
+     * @see Jeu#save()
+     * @see Jeu#chargerJeuFromFile(File)
+     * @see Grille#getJSONObject()
+     */
     public JSONObject getJSONObject() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("id", this.id);
@@ -188,7 +342,25 @@ public class PlateauDeJeu {
         return jsonObject;
     }
 
-
+    /**
+     * Fonction traçant un chemin entre le roi et la case, et si un chemin est possible respectant les mouvements
+     * de la pièce d'origine du mouvement, en retourne la liste des cases;
+     * <p>Cette fonction permet de savoir si un pion est directement en face à face avec le roi sans avoir à passer par 
+     * <ul>
+     *     <li>{@linkplain PlateauDeJeu#generateListeDeplacementsBlancs(Boolean, Boolean, Boolean)}</li>
+     *     <li>{@linkplain PlateauDeJeu#generateListeDeplacementsNoirs(Boolean, boolean, boolean)}}</li>
+     *     <li>{@linkplain PlateauDeJeu#getDeplacementsPossiblesPions(Case)}</li>
+     *     <li>{@linkplain PlateauDeJeu#getDeplacementsPossiblesTours(Case, boolean, boolean)}</li>
+     *     <li>{@linkplain PlateauDeJeu#getDeplacementsPossiblesCavaliers(Case)}</li>
+     *     <li>{@linkplain PlateauDeJeu#getDeplacementsPossiblesFou(Case, boolean, boolean)}</li>
+     *     <li>{@linkplain PlateauDeJeu#getDeplacementsPossiblesReine(Case, boolean, boolean)}</li>
+     *     <li>{@linkplain PlateauDeJeu#getDeplacementsPossiblesRoi(Case, boolean)}</li>
+     * </ul>
+     * </p>
+     * @param origine case contenant le pion dont part le chemin jusqu'au roi
+     * @param roi Case contenant le roi
+     * @return Liste des cases entre le roi et l'origine. Retourne une liste vide si aucun chemin n'est possible
+     */
     public ArrayList<Case> getCheminToRoi(Case origine, Case roi) {
         ArrayList<Case> chemin = new ArrayList<>();
         if (origine.piece.getClassePiece().equalsIgnoreCase("tour")) {
@@ -215,6 +387,7 @@ public class PlateauDeJeu {
             }
         }
         if (origine.piece.getClassePiece().equalsIgnoreCase("reine")) {
+            System.out.println("Origine " + origine + " roi " + roi);
             if (origine.y == roi.y) {
                 if (origine.x > roi.x) {
                     for (int x = 1; x <= origine.x - roi.x; x++) {
@@ -286,11 +459,20 @@ public class PlateauDeJeu {
     /**
      * Fonction permettant d'avoir les déplacements possibles d'une piece
      * @param posPiece <code>{@linkplain Case}</code> : Case de la piece dont on veut avoir les déplacements
+     * @param prevoirPrise Boolean déterminant si un pion doit considérer une case contenant un de ses allié au cas où cette dernier
+     *                     viendrait à être prise, dans quel cas cette case contenant initialement son allié, pourrait alors
+     *                     contenir un ennemi
+     * @param continuer Boolean indiquant si une pièce à projection linéaire doit ignorer les pions sur son passage et prendre
+     *                  toutes les lignes comme déplacement possible malgré leur contenu. Cela permet de considérer une case
+     *                  habituellement cachée par un roi met tout de même dans l'alignement avec la pièce. Case dans laquelle
+     *                  dès lors le roi ne pourrait plus se déplacer car considérer dans les déplacements possibles de la pièce
+     *                  grâce à ce paramètre
      * @return <code>ArrayList<{@linkplain Case}></code> : Retourne une liste de cases des déplacements possibles
      * @see Case
-     * @author melissa
+     * @author melissa, yohan
      */
     public ArrayList<Case> deplacementsPossible (Case posPiece, boolean prevoirPrise, boolean continuer) {
+
         ArrayList<Case> listeCases = new ArrayList<>();
 
         int x = posPiece.x;
@@ -325,10 +507,32 @@ public class PlateauDeJeu {
         return listeCases;
     }
 
+    /**
+     * Fonction permettant d'avoir les déplacements possibles d'une piece
+     * @param posPiece <code>{@linkplain Case}</code> : Case de la piece dont on veut avoir les déplacements
+     * @return <code>ArrayList<{@linkplain Case}></code> : Retourne une liste de cases des déplacements possibles
+     * @see Case
+     * @see PlateauDeJeu#updateListeDeplacements(Boolean)
+     * @author melissa, yohan
+     */
     public ArrayList<Case> deplacementsPossible (Case posPiece) {
         return deplacementsPossible(posPiece, false, false);
     }
 
+    /**
+     * Fonction récupérant les déplacements théoriques possibles simples d'un Cavalier, c'est à dire qui prend en compte les
+     * paramètres suivants :
+     * <ul>
+     *     <li>Case vide ou non</li>
+     *     <li>Couleur du pion si dans une case non vide</li>
+     *     <li>Déplacement théorique du pion</li>
+     * </ul>
+     * @param posPiece position du Cavalier
+     * @return <code>ArrayListe {@linkplain Case}</code> liste contenant toutes les cases sur lesquelles peut
+     * se déplacer le cavalier
+     * @see PlateauDeJeu#updateListeDeplacements(Boolean)
+     * @author melissa, yohan
+     */
     public ArrayList<Case> getDeplacementsPossiblesCavaliers(Case posPiece) {
 
         ArrayList<Case> listeCases = new ArrayList<>();
@@ -411,6 +615,20 @@ public class PlateauDeJeu {
         return listeCases;
     }
 
+    /**
+     * Fonction récupérant les déplacements théoriques possibles simples d'un fou, c'est à dire qui prend en compte les
+     * paramètres suivants :
+     * <ul>
+     *     <li>Case vide ou non</li>
+     *     <li>Couleur du pion si dans une case non vide</li>
+     *     <li>Déplacement théorique du pion</li>
+     * </ul>
+     * @param posPiece position du fou
+     * @return <code>ArrayListe {@linkplain Case}</code> liste contenant toutes les cases sur lesquelles peut
+     * se déplacer le fou
+     * @see PlateauDeJeu#updateListeDeplacements(Boolean)
+     * @author melissa, yohan
+     */
     public ArrayList<Case> getDeplacementsPossiblesFou(Case posPiece, boolean prevoirPrise, boolean continuer) {
 
         ArrayList<Case> listeCases = new ArrayList<>();
@@ -501,6 +719,20 @@ public class PlateauDeJeu {
         return listeCases;
     }
 
+    /**
+     * Fonction récupérant les déplacements théoriques possibles simples d'une reine, c'est à dire qui prend en compte les
+     * paramètres suivants :
+     * <ul>
+     *     <li>Case vide ou non</li>
+     *     <li>Couleur du pion si dans une case non vide</li>
+     *     <li>Déplacement théorique du pion</li>
+     * </ul>
+     * @param posPiece position de la reine
+     * @return <code>ArrayListe {@linkplain Case}</code> liste contenant toutes les cases sur lesquelles peut
+     * se déplacer la reine
+     * @see PlateauDeJeu#updateListeDeplacements(Boolean)
+     * @author melissa, yohan
+     */
     public ArrayList<Case> getDeplacementsPossiblesReine(Case posPiece, boolean prevoirPrise, boolean continuer) {
 
         ArrayList<Case> listeCases = new ArrayList<>();
@@ -643,6 +875,20 @@ public class PlateauDeJeu {
         return listeCases;
     }
 
+    /**
+     * Fonction récupérant les déplacements théoriques possibles simples d'une tour, c'est à dire qui prend en compte les
+     * paramètres suivants :
+     * <ul>
+     *     <li>Case vide ou non</li>
+     *     <li>Couleur du pion si dans une case non vide</li>
+     *     <li>Déplacement théorique du pion</li>
+     * </ul>
+     * @param posPiece position de la tour
+     * @return <code>ArrayListe {@linkplain Case}</code> liste contenant toutes les cases sur lesquelles peut
+     * se déplacer la tour
+     * @see PlateauDeJeu#updateListeDeplacements(Boolean)
+     * @author melissa, yohan
+     */
     public ArrayList<Case> getDeplacementsPossiblesTours(Case posPiece, boolean prevoirPrise, boolean continuer) {
 
         ArrayList<Case> listeCases = new ArrayList<>();
@@ -713,6 +959,20 @@ public class PlateauDeJeu {
         return listeCases;
     }
 
+    /**
+     * Fonction récupérant les déplacements théoriques possibles simples d'un pion, c'est à dire qui prend en compte les
+     * paramètres suivants :
+     * <ul>
+     *     <li>Case vide ou non</li>
+     *     <li>Couleur du pion si dans une case non vide</li>
+     *     <li>Déplacement théorique du pion</li>
+     * </ul>
+     * @param posPiece position du pion
+     * @return <code>ArrayListe {@linkplain Case}</code> liste contenant toutes les cases sur lesquelles peut
+     * se déplacer le pion
+     * @see PlateauDeJeu#updateListeDeplacements(Boolean)
+     * @author melissa, yohan
+     */
     public ArrayList<Case> getDeplacementsPossiblesPions(Case posPiece) {
 
         ArrayList<Case> listeCases = new ArrayList<>();
@@ -780,6 +1040,21 @@ public class PlateauDeJeu {
             return listeCases;
     }
 
+    /**
+     * Fonction récupérant les déplacements avancés d'un roi, c'est à dire qui prend en compte les
+     * paramètres suivants :
+     * <ul>
+     *     <li>Case vide ou non</li>
+     *     <li>Couleur du roi si dans une case non vide</li>
+     *     <li>Déplacement théorique du roi</li>
+     *     <li>La possibilité de se mettre en echec à cause de ce mouvement</li>
+     * </ul>
+     * @param posPiece position du roi
+     * @return <code>ArrayListe {@linkplain Case}</code> liste contenant toutes les cases sur lesquelles peut
+     * se déplacer le roi
+     * @see PlateauDeJeu#updateListeDeplacements(Boolean)
+     * @author melissa, yohan
+     */
     public ArrayList<Case> getDeplacementsPossiblesRoi(Case posPiece, boolean prevoirPrise) {
 
         ArrayList<Case> listeCases = new ArrayList<>();
@@ -789,12 +1064,12 @@ public class PlateauDeJeu {
 
         if (x + 1 <= 8 && y + 1 <= 8) {
             if (grille.getCase(x + 1, y + 1).estVide()) {
-                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y + 1)).isEchec().equals("no-echec")) {
+                if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x + 1, y + 1)).isEchec().equals("no-echec")) {
                     listeCases.add(this.grille.getCase(x + 1, y + 1));
                 }
             } else {
                 if (!grille.getCase(x + 1, y + 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                   if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y + 1), true).isEchec().equals("no-echec")) {
+                   if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x + 1, y + 1), true).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x + 1, y + 1));
                     }
                 }
@@ -802,12 +1077,12 @@ public class PlateauDeJeu {
         }
         if (x - 1 > 0 && y + 1 <= 8) {
             if (grille.getCase(x - 1, y + 1).estVide()) {
-                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y + 1)).isEchec().equals("no-echec")) {
+                if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x - 1, y + 1)).isEchec().equals("no-echec")) {
                     listeCases.add(this.grille.getCase(x - 1, y + 1));
                 }
             } else {
                 if (!grille.getCase(x - 1, y + 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                    if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y + 1)).isEchec().equals("no-echec")) {
+                    if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x - 1, y + 1)).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x - 1, y + 1));
                     }
                 }
@@ -816,12 +1091,12 @@ public class PlateauDeJeu {
         //x, y + 1
         if (y + 1 <= 8) {
             if (grille.getCase(x, y + 1).estVide()) {
-                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x, y + 1)).isEchec().equals("no-echec")) {
+                if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x, y + 1)).isEchec().equals("no-echec")) {
                     listeCases.add(this.grille.getCase(x, y + 1));
                 }
             } else {
                 if (!grille.getCase(x, y + 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                    if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x, y + 1)).isEchec().equals("no-echec")) {
+                    if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x, y + 1)).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x, y + 1));
                     }
                 }
@@ -830,12 +1105,12 @@ public class PlateauDeJeu {
         //x, y - 1
         if (y - 1 > 0) {
             if (grille.getCase(x, y - 1).estVide()) {
-                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x, y - 1)).isEchec().equals("no-echec")) {
+                if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x, y - 1)).isEchec().equals("no-echec")) {
                     listeCases.add(this.grille.getCase(x, y - 1));
                 }
             } else {
                 if (!grille.getCase(x, y - 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                    if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x, y - 1)).isEchec().equals("no-echec")) {
+                    if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x, y - 1)).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x, y - 1));
                     }
                 }
@@ -844,12 +1119,12 @@ public class PlateauDeJeu {
         //x + 1, y
         if (x + 1 <= 8) {
             if (grille.getCase(x + 1, y).estVide()) {
-                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y)).isEchec().equals("no-echec")) {
+                if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x + 1, y)).isEchec().equals("no-echec")) {
                     listeCases.add(this.grille.getCase(x + 1, y));
                 }
             } else {
                 if (!grille.getCase(x + 1, y).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                    if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y)).isEchec().equals("no-echec")) {
+                    if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x + 1, y)).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x + 1, y));
                     }
                 }
@@ -858,12 +1133,12 @@ public class PlateauDeJeu {
         //x - 1, y
         if (x - 1 > 0 ) {
             if (grille.getCase(x - 1, y).estVide()) {
-                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y)).isEchec().equals("no-echec")) {
+                if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x - 1, y)).isEchec().equals("no-echec")) {
                     listeCases.add(this.grille.getCase(x - 1, y));
                 }
             } else {
                 if (!grille.getCase(x - 1, y).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                    if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y)).isEchec().equals("no-echec")) {
+                    if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x - 1, y)).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x - 1, y));
                     }
                 }
@@ -872,12 +1147,12 @@ public class PlateauDeJeu {
         //x - 1, y - 1
         if (x - 1 > 0 && y - 1 > 0) {
             if (grille.getCase(x - 1, y - 1).estVide()) {
-                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y - 1)).isEchec().equals("no-echec")) {
+                if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x - 1, y - 1)).isEchec().equals("no-echec")) {
                     listeCases.add(this.grille.getCase(x - 1, y - 1));
                 }
             } else {
                 if (!grille.getCase(x - 1, y - 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                    if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x - 1, y - 1)).isEchec().equals("no-echec")) {
+                    if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x - 1, y - 1)).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x - 1, y - 1));
                     }
                 }
@@ -886,12 +1161,12 @@ public class PlateauDeJeu {
         //x + 1, y - 1
         if (x + 1 <= 8 && y - 1 > 0) {
             if (grille.getCase(x + 1, y - 1).estVide()) {
-                if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y - 1)).isEchec().equals("no-echec")) {
+                if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x + 1, y - 1)).isEchec().equals("no-echec")) {
                     listeCases.add(this.grille.getCase(x + 1, y - 1));
                 }
             } else {
                 if (!grille.getCase(x + 1, y - 1).piece.getCouleur().equalsIgnoreCase(posPiece.piece.getCouleur())) {
-                    if (detecterEchec2(grille.getCase(posPiece).piece, grille.getCase(x + 1, y - 1)).isEchec().equals("no-echec")) {
+                    if (detecterEchec(grille.getCase(posPiece).piece, grille.getCase(x + 1, y - 1)).isEchec().equals("no-echec")) {
                         listeCases.add(this.grille.getCase(x + 1, y - 1));
                     }
                 }
@@ -900,11 +1175,38 @@ public class PlateauDeJeu {
         return listeCases;
     }
 
+    /**
+     * Fonction mettant à jour :
+     * <ul>
+     *     <li>{@linkplain PlateauDeJeu#listeDeplacementBlancs}</li>
+     *     <li>{@linkplain PlateauDeJeu#listeDeplacementNoirs}</li>
+     * </ul>
+     * @param pionAvanceOnly Boolean permettant de préciser si l'on doit compter comme mouvement pour les pions
+     *                       leurs prises, ou leurs déplacements, par exemple un pion ne peut pas avancer en diagonal
+     *                       si la case est vide.
+     * @author melissa, yohan
+     */
     public void updateListeDeplacements(Boolean pionAvanceOnly) {
         listeDeplacementBlancs = this.generateListeDeplacementsBlancs(pionAvanceOnly, false, false);
         listeDeplacementNoirs = this.generateListeDeplacementsNoirs(pionAvanceOnly, false, false);
     }
 
+    /**
+     * Fonction générant la liste des {@linkplain Deplacement} possibles des blancs
+     * @param pionAvanceOnly Boolean permettant de préciser si l'on doit compter comme mouvement pour les pions
+     *                       leurs prises, ou leurs déplacements, par exemple un pion ne peut pas avancer en diagonal
+     *                       si la case est vide.
+     * @param prevoirPrise Boolean déterminant si un pion doit considérer une case contenant un de ses allié au cas où cette dernier
+     *                     viendrait à être prise, dans quel cas cette case contenant initialement son allié, pourrait alors
+     *                     contenir un ennemi
+     * @param continuer Boolean indiquant si une pièce à projection linéaire doit ignorer les pions sur son passage et prendre
+     *                  toutes les lignes comme déplacement possible malgré leur contenu. Cela permet de considérer une case
+     *                  habituellement cachée par un roi met tout de même dans l'alignement avec la pièce. Case dans laquelle
+     *                  dès lors le roi ne pourrait plus se déplacer car considérer dans les déplacements possibles de la pièce
+     *                  grâce à ce paramètre
+     * @return Liste des {@linkplain Deplacement} des blancs
+     * @see Deplacement
+     */
     public ArrayList<Deplacement> generateListeDeplacementsBlancs(Boolean pionAvanceOnly, Boolean prevoirPrise, Boolean continuer) {
         ArrayList<Case> listeBlancs = this.grille.getListePieceCouleur("blanc");
         ArrayList<Deplacement> listeDeplacementBlancs = new ArrayList<>();
@@ -1015,6 +1317,22 @@ public class PlateauDeJeu {
         return temp;
     }
 
+    /**
+     * Fonction générant la liste des {@linkplain Deplacement} possibles des noirs
+     * @param pionAvanceOnly Boolean permettant de préciser si l'on doit compter comme mouvement pour les pions
+     *                       leurs prises, ou leurs déplacements, par exemple un pion ne peut pas avancer en diagonal
+     *                       si la case est vide.
+     * @param prevoirPrise Boolean déterminant si un pion doit considérer une case contenant un de ses allié au cas où cette dernier
+     *                     viendrait à être prise, dans quel cas cette case contenant initialement son allié, pourrait alors
+     *                     contenir un ennemi
+     * @param continuer Boolean indiquant si une pièce à projection linéaire doit ignorer les pions sur son passage et prendre
+     *                  toutes les lignes comme déplacement possible malgré leur contenu. Cela permet de considérer une case
+     *                  habituellement cachée par un roi met tout de même dans l'alignement avec la pièce. Case dans laquelle
+     *                  dès lors le roi ne pourrait plus se déplacer car considérer dans les déplacements possibles de la pièce
+     *                  grâce à ce paramètre
+     * @return Liste des {@linkplain Deplacement} des noirs
+     * @see Deplacement
+     */
     public ArrayList<Deplacement> generateListeDeplacementsNoirs(Boolean pionAvanceOnly, boolean prevoirPrise, boolean continuer) {
         ArrayList<Case> listeNoirs;
         ArrayList<Deplacement> listeDeplacementNoirs = new ArrayList<>();
@@ -1047,39 +1365,71 @@ public class PlateauDeJeu {
             } else if (c.piece.getClassePiece().equalsIgnoreCase("roi")) {
                 l = new ArrayList<>();
                 if (c.y + 1 <= 8) {
-                    if (this.grille.getCase(c.x, c.y + 1).estVide()) l.add(this.grille.getCase(c.x, c.y + 1));
+                    if (!this.grille.getCase(c.x, c.y + 1).estVide()) {
+                        if (!this.grille.getCase(c.x, c.y + 1).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                            l.add(this.grille.getCase(c.x, c.y + 1));
+                        }
+                    } else l.add(this.grille.getCase(c.x, c.y + 1));
                 }
                 if (c.y - 1 > 0) {
-                    if (this.grille.getCase(c.x, c.y - 1).estVide()) l.add(this.grille.getCase(c.x, c.y - 1));
+                    if (!this.grille.getCase(c.x, c.y - 1).estVide()) {
+                        if (!this.grille.getCase(c.x, c.y - 1).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                            l.add(this.grille.getCase(c.x, c.y - 1));
+                        }
+                    } else l.add(this.grille.getCase(c.x, c.y - 1));
                 }
                 listeDeplacementNoirs.add(new Deplacement(c, l));
 
                 l = new ArrayList<>();
                 if (c.x + 1 <= 8) {
                     if (c.y + 1 <= 8) {
-                        if (this.grille.getCase(c.x + 1, c.y + 1).estVide()) l.add(this.grille.getCase(c.x + 1, c.y + 1));
+                        if (!this.grille.getCase(c.x + 1, c.y + 1).estVide()) {
+                            if (!this.grille.getCase(c.x + 1, c.y + 1).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                                l.add(this.grille.getCase(c.x + 1, c.y + 1));
+                            }
+                        } else l.add(this.grille.getCase(c.x + 1, c.y + 1));;
                     }
                     if (c.y - 1 > 0) {
-                        if (this.grille.getCase(c.x + 1, c.y - 1).estVide()) l.add(this.grille.getCase(c.x + 1, c.y - 1));
+                        if (!this.grille.getCase(c.x + 1, c.y - 1).estVide()) {
+                            if (!this.grille.getCase(c.x + 1, c.y - 1).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                                l.add(this.grille.getCase(c.x + 1, c.y - 1));
+                            }
+                        } else l.add(this.grille.getCase(c.x + 1, c.y - 1));
                     }
-                    if (this.grille.getCase(c.x + 1, c.y).estVide()) l.add(this.grille.getCase(c.x + 1, c.y));
+                    if (!this.grille.getCase(c.x + 1, c.y).estVide()) {
+                        if (!this.grille.getCase(c.x + 1, c.y).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                            l.add(this.grille.getCase(c.x + 1, c.y));
+                        }
+                    } else l.add(this.grille.getCase(c.x + 1, c.y));
                 }
                 listeDeplacementNoirs.add(new Deplacement(c, l));
 
                 l = new ArrayList<>();
                 if (c.x - 1 > 0) {
                     if (c.y + 1 <= 8) {
-                        if (this.grille.getCase(c.x - 1, c.y + 1).estVide()) l.add(this.grille.getCase(c.x - 1, c.y + 1));
+                        if (!this.grille.getCase(c.x - 1, c.y + 1).estVide()) {
+                            if (!this.grille.getCase(c.x - 1, c.y + 1).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                                l.add(this.grille.getCase(c.x - 1, c.y + 1));
+                            }
+                        } else l.add(this.grille.getCase(c.x - 1, c.y + 1));
                     }
                     if (c.y - 1 > 0) {
-                        if (this.grille.getCase(c.x - 1, c.y - 1).estVide()) l.add(this.grille.getCase(c.x - 1, c.y - 1));
+                        if (!this.grille.getCase(c.x - 1, c.y - 1).estVide()) {
+                            if (!this.grille.getCase(c.x - 1, c.y - 1).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                                l.add(this.grille.getCase(c.x - 1, c.y - 1));
+                            }
+                        } else l.add(this.grille.getCase(c.x - 1, c.y - 1));
                     }
-                    if (this.grille.getCase(c.x - 1, c.y).estVide()) l.add(this.grille.getCase(c.x - 1, c.y));
+                    if (!this.grille.getCase(c.x - 1, c.y).estVide()) {
+                        if (!this.grille.getCase(c.x - 1, c.y).piece.getCouleur().equalsIgnoreCase(c.piece.getCouleur())) {
+                            l.add(this.grille.getCase(c.x - 1, c.y));
+                        }
+                    } else l.add(this.grille.getCase(c.x - 1, c.y - 1));
                 }
                 listeDeplacementNoirs.add(new Deplacement(c, l));
             } else {
                 l = new ArrayList<>();
-                for (Case d : this.deplacementsPossible(c, prevoirPrise, continuer)) {
+                for (Case d : this.deplacementsPossible(c, false, continuer)) {
                     l.add(d);
                 }
                 listeDeplacementNoirs.add(new Deplacement(c, l));
@@ -1094,11 +1444,32 @@ public class PlateauDeJeu {
         return temp;
     }
 
-    public Echec detecterEchec2 (Piece pieceRoi, Case posRoi) {
-        return detecterEchec2(pieceRoi, posRoi, false);
+    /**
+     * Fonction déterminant si la case donnée met en echec le roi donnée
+     * @param pieceRoi Roi potentiellement en echec
+     * @param posRoi Case où il peut potientiellement se mettre en situation d'échec
+     * @return {@linkplain Echec}
+     * @see EchecApplication
+     * @see Echec
+     * @author yohan
+     */
+    public Echec detecterEchec(Piece pieceRoi, Case posRoi) {
+        return detecterEchec(pieceRoi, posRoi, false);
     }
 
-    public Echec detecterEchec2 (Piece pieceRoi, Case posRoi, boolean prevoirPrise) {
+    /**
+     * Fonction déterminant si la case donnée met en echec le roi donnée
+     * @param pieceRoi Roi potentiellement en echec
+     * @param posRoi Case où il peut potientiellement se mettre en situation d'échec
+     * @param prevoirPrise Boolean déterminant si un pion doit considérer une case contenant un de ses allié au cas où cette dernier
+     *                     viendrait à être prise, dans quel cas cette case contenant initialement son allié, pourrait alors
+     *                     contenir un ennemi
+     * @return {@linkplain Echec}
+     * @see EchecApplication
+     * @see Echec
+     * @author yohan
+     */
+    public Echec detecterEchec(Piece pieceRoi, Case posRoi, boolean prevoirPrise) {
 
         String couleurEnnemie = (pieceRoi.getCouleur() == "noir") ? "blanc" : "noir";
         ArrayList<Deplacement> listeDeplacement = new ArrayList<>();
@@ -1123,21 +1494,36 @@ public class PlateauDeJeu {
         return echec;
     }
 
+    /**
+     * Fonction permettant de choisir des déplacements basant sur le score des pièces qu'il peut
+     * prendre
+     * @author Melissa
+     * @author Yohan
+     */
     public void IA() {
-        System.out.println("IA");
+        // ArrayList contenant les scores des pièces qu'on peut prendre.
         ArrayList<Integer> scores = new ArrayList<Integer>();
+        // ArrayList contenant les cases d'origine des pièces qui peuvent prendre des pièces de l'adversaire.
         ArrayList<Case> casesOrigine = new ArrayList<>();
+        // ArrayList contenant les cases où se trouvent les pièces qu'on peut prendre.
         ArrayList<Case> casesDestination = new ArrayList<>();
-
+        // ArrayList contenant les cases d'origine des pièces qui ne peuvent que déplacer.
         ArrayList<Case> casesOrigine0 = new ArrayList<>();
+        // ArrayList contenant les cases où on peut déplacer.
         ArrayList<Case> casesDestination0 = new ArrayList<>();
-
+        // Variable contenant la case d'origine de la pièce qu'on bougera.
         Case caseOrigine;
+        // Variable contenant la case où on va bouger notre pièce.
         Case caseDestination;
 
+        // Verifier pour chaque pièce noire s'il y a possibilité de prendre une pièce blanche.
         for (int i = 1 ; i <= 8 ; i++) {
             for (int j = 1; j <= 8 ; j++) {
                 if (grille.getCase(i, j).piece != null) {
+
+                    // Verifier si Pion_noir_1 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Pion_noir_1.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_1")) {
                         ArrayList<Case> deplacementsPion1 = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsPion1.size() ; a++) {
@@ -1152,6 +1538,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Pion_noir_2 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Pion_noir_2.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_2")) {
                         ArrayList<Case> deplacementsPion2 = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsPion2.size() ; a++) {
@@ -1166,6 +1556,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Pion_noir_3 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Pion_noir_3.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_3")) {
                         ArrayList<Case> deplacementsPion3 = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsPion3.size() ; a++) {
@@ -1180,6 +1574,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Pion_noir_4 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Pion_noir_4.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_4")) {
                         ArrayList<Case> deplacementsPion4 = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsPion4.size() ; a++) {
@@ -1194,6 +1592,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Pion_noir_5 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Pion_noir_5.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_5")) {
                         ArrayList<Case> deplacementsPion5 = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsPion5.size() ; a++) {
@@ -1208,6 +1610,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Pion_noir_6 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Pion_noir_6.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_6")) {
                         ArrayList<Case> deplacementsPion6 = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsPion6.size() ; a++) {
@@ -1222,6 +1628,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Pion_noir_7 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Pion_noir_7.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_7")) {
                         ArrayList<Case> deplacementsPion7 = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsPion7.size() ; a++) {
@@ -1236,6 +1646,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Pion_noir_7 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Pion_noir_7.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Pion_noir_8")) {
                         ArrayList<Case> deplacementsPion8 = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsPion8.size() ; a++) {
@@ -1250,6 +1664,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Cavalier_noir_1 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Cavalier_noir_1.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Cavalier_noir_1")) {
                         ArrayList<Case> deplacementsCavalier1 = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsCavalier1.size() ; a++) {
@@ -1264,6 +1682,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Cavalier_noir_2 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Cavalier_noir_2.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Cavalier_noir_2")) {
                         ArrayList<Case> deplacementsCavalier2 = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsCavalier2.size() ; a++) {
@@ -1278,6 +1700,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Fou_noir_1 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Fou_noir_1.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Fou_noir_1")) {
                         ArrayList<Case> deplacementsFou1 = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsFou1.size() ; a++) {
@@ -1292,6 +1718,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Fou_noir_2 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Fou_noir_2.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Fou_noir_2")) {
                         ArrayList<Case> deplacementsFou2 = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsFou2.size() ; a++) {
@@ -1306,6 +1736,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Tour_noir_1 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Tour_noir_1.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Tour_noir_1")) {
                         ArrayList<Case> deplacementsTour1 = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsTour1.size() ; a++) {
@@ -1320,6 +1754,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Tour_noir_2 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Tour_noir_2.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Tour_noir_2")) {
                         ArrayList<Case> deplacementsTour2 = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsTour2.size() ; a++) {
@@ -1334,6 +1772,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Reine_noir_1 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Reine_noir_1.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Reine_noir_1")) {
                         ArrayList<Case> deplacementsReine = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsReine.size() ; a++) {
@@ -1348,6 +1790,10 @@ public class PlateauDeJeu {
                             }
                         }
                     }
+
+                    // Verifier si Roi_noir_1 peut prendre des pièces.
+                    // Si oui, sauvergarder les score et les cases des pièces qu'on peut prendre.
+                    // Si non, sauvegarder les cases des déplacements possibles de Roi_noir_1.
                     if (grille.getCase(i, j).piece.getId().equalsIgnoreCase("Roi_noir_1")) {
                         ArrayList<Case> deplacementsRoi = deplacementsPossible(grille.getCase(i, j));
                         for (int a = 0 ; a < deplacementsRoi.size() ; a++) {
@@ -1367,6 +1813,8 @@ public class PlateauDeJeu {
             }
         }
 
+        // Si aucune des pièces noires ne peut prendre une pièce blanche, on choisit un déplacement aléatoirement.
+        // Si non, on prend la pièce blanche qui a le score le plus grand.
         if (scores.isEmpty()) {
             Random rand = new Random();
             int index = rand.nextInt(casesOrigine0.size());
@@ -1383,9 +1831,33 @@ public class PlateauDeJeu {
             caseDestination = casesDestination.get(index);
             prendrePiece(caseOrigine, caseDestination);
         }
+
     }
 
-    public void IAEchec() {
+    /**
+     * Fonction gérant les echecs pour l'IA, et jouant seulement les coups possibles qui la sauverait d'un echec
+     * @param echecApplication {@linkplain EchecApplication} Classe Main contenant toutes les informations nécéssaires
+     *                                                      pour l'IA pour déterminer ses meilleurs options possibles
+     * @author yohan
+     */
+    public void IAEchec(EchecApplication echecApplication) {
+
+        ArrayList<Deplacement> listeDeplacementsPossibles = echecApplication.getJeu().plateau.getEchec().getSauveur();
+
+        Random rand = new Random();
+        Integer choix = rand.nextInt(listeDeplacementsPossibles.size());
+        Integer choixDeplacement = rand.nextInt(listeDeplacementsPossibles.get(choix).getDeplacement().size());
+
+        Case origine = listeDeplacementsPossibles.get(choix).getOrigine();
+        Case destination = listeDeplacementsPossibles.get(choix).getDeplacement().get(choixDeplacement);
+
+        if (destination.piece == null) {
+            deplacerPiece(origine, destination);
+        }
+        else
+        {
+            prendrePiece(origine, destination);
+        }
 
     }
 }
