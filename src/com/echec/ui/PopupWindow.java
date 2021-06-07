@@ -18,17 +18,17 @@ public class PopupWindow {
     /**
      * Texte contenu dans la Popup
      */
-    private String contenu;
+    private final String contenu;
 
     /**
      * Largeur de la fenêtre de Popup
      */
-    private int x;
+    private final int x;
 
     /**
      * Hauteur de la fenêtre de Popup
      */
-    private int y;
+    private final int y;
 
     /**
      * Constructeur classique de la popup
