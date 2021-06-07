@@ -1837,20 +1837,26 @@ public class PlateauDeJeu {
     /**
      * Fonction gérant les echecs pour l'IA, et jouant seulement les coups possibles qui la sauverait d'un echec
      * @param echecApplication {@linkplain EchecApplication} Classe Main contenant toutes les informations nécéssaires
-     *                                                      pour l'IA pour déterminer ses meilleurs options possibles
+     * pour l'IA pour déterminer ses meilleurs options possibles
      * @author yohan
      */
     public void IAEchec(EchecApplication echecApplication) {
 
+        // On récupère tous les déplacements possibles des sauveurs du Jeu
         ArrayList<Deplacement> listeDeplacementsPossibles = echecApplication.getJeu().plateau.getEchec().getSauveur();
 
+        // On sélectionne une origine random dans la liste
         Random rand = new Random();
         Integer choix = rand.nextInt(listeDeplacementsPossibles.size());
+
+        // Dans cette origine on sélectionne un déplacement random
         Integer choixDeplacement = rand.nextInt(listeDeplacementsPossibles.get(choix).getDeplacement().size());
 
+        // On format en Case les résultats pour qu'ils soient utilisables
         Case origine = listeDeplacementsPossibles.get(choix).getOrigine();
         Case destination = listeDeplacementsPossibles.get(choix).getDeplacement().get(choixDeplacement);
 
+        // Si la destination est pleine alors c'est une prise, sinon c'est un déplacement
         if (destination.piece == null) {
             deplacerPiece(origine, destination);
         }
