@@ -281,6 +281,7 @@ public class Controller{
     @FXML
     public void openHelp() {
         this.echecApplication.openBrowser();
+        // https://www.youtube.com/watch?v=dQw4w9WgXcQ
         // https://www.youtube.com/watch?v=fKxG8KjH1Qg
     }
 

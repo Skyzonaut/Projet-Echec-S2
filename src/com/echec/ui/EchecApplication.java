@@ -842,6 +842,7 @@ public class EchecApplication extends Application {
      * @author yohan
      */
     public void openBrowser() {
+//        getHostServices().showDocument(" https://www.youtube.com/watch?v=dQw4w9WgXcQ");
         getHostServices().showDocument("https://www.youtube.com/watch?v=n1T1knKg_58");
     }
 
