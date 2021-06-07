@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane prefHeight="258.0" prefWidth="343.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.echec.ui.ControllerParam">
+   <children>
+      <ToggleButton fx:id="ia" layoutX="77.0" layoutY="69.0" mnemonicParsing="false" text="        IA        " textAlignment="CENTER">
+         <toggleGroup>
+            <ToggleGroup fx:id="difficulte" />
+         </toggleGroup></ToggleButton>
+      <ToggleButton fx:id="pve" layoutX="187.0" layoutY="69.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="80.0" text="1 v 1" toggleGroup="$difficulte" />
+      <ToggleButton fx:id="facile" layoutX="77.0" layoutY="158.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="80.0" text="Facile" />
+      <ToggleButton fx:id="difficile" layoutX="187.0" layoutY="158.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="80.0" text="Difficile" />
+      <Label layoutX="108.0" layoutY="121.0" prefHeight="17.0" prefWidth="130.0" text="Sélectionnez la difficulté" />
+      <Label layoutX="97.0" layoutY="30.0" text="Sélectionnez le mode de jeu" />
+      <Button fx:id="confirmer" layoutX="77.0" layoutY="198.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="189.0" style="-fx-background-color: transparent;" text="Confirmer" textAlignment="CENTER">
+         <font>
+            <Font size="18.0" />
+         </font></Button>
+   </children>
+</AnchorPane>
