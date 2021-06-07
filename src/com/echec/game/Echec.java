@@ -2,13 +2,56 @@ package com.echec.game;
 
 import java.util.ArrayList;
 
+/**
+ * Classe simulant un test d'échec, avec s:
+ * <ul>
+ *     <li>Son roi</li>
+ *     <li>Son résultat de test</li>
+ *     <li>Les pièces attaquants le roi <i>généralement à 1</i></li>
+ *     <li>Les déplacements alliées pouvant sauver le roi de cet echec</li>
+ * </ul>
+ * @author yohan
+ * @see Deplacement
+ * @see com.echec.ui.EchecApplication
+ */
 public class Echec {
+    /**
+     * Case contenant le roi
+     */
     private final Case roi;
+
+    /**
+     * Lien vers le plateau de Jeu
+     */
     private final PlateauDeJeu plateau;
+
+    /**
+     * Couleur du roi
+     */
     private final String couleurRoi;
+
+    /**
+     * Liste des déplacements pouvant sauver le roi de son échec
+     */
     private ArrayList<Deplacement> sauveur = new ArrayList<>();
+
+    /**
+     * Liste des pions attanquants le roi ayant causés cet échec.
+     * <i>Généralement ne contenant qu'une seule pièce</i>
+     */
     private final ArrayList<Deplacement> attaquants;
 
+    /**
+     * Constructeur champ à champ de l'échec
+     * @param plateau {@linkplain PlateauDeJeu}
+     * @param roi {@linkplain Case}
+     * @param couleur <code>String</code>
+     * @param attaquants ArrayList {@linkplain Deplacement}
+     * @author yohan
+     * @see Deplacement
+     * @see com.echec.ui.EchecApplication
+     * @see PlateauDeJeu
+     */
     public Echec (PlateauDeJeu plateau, Case roi, String couleur, ArrayList<Deplacement> attaquants) {
         this.plateau = plateau;
         this.roi = roi;
@@ -17,14 +60,34 @@ public class Echec {
         this.trouverSauveur();
     }
 
+    /**
+     * Getter de la liste des sauveurs
+     * @return ArrayList {@linkplain Deplacement}
+     * @author yohan
+     */
     public ArrayList<Deplacement> getSauveur() {
         return sauveur;
     }
 
+    /**
+     * Fonction retournant la présence de sauveurs ou non pour cet echec
+     * @return <code>Boolean</code>
+     * @author yohan
+     */
     public boolean hasSauveurs() {
         return this.sauveur.size() != 0;
     }
 
+    /**
+     * Fonction retournant le type d'échec
+     * <ul><li><code>echec</code> : Si il y a echec mais possibilité de bouger le roi ou le protéger</li>
+     * <li><code>mat</code> : Si il y a échec et que rien ne peut sauver le roi</li>
+     * <li><code>no-echec</code> : Si le roi n'est pas en echec</li></ul>
+     * @return <code>String</code> : le cas d'echec
+     * @author yohan
+     * @see Echec#trouverSauveur() 
+     * @see com.echec.ui.EchecApplication#Echec(Case)
+     */
     public String isEchec() {
         if (this.attaquants.size() != 0 && this.sauveur.size() != 0)
         {
@@ -40,8 +103,15 @@ public class Echec {
         }
         return "no-echec";
     }
-    public void trouverSauveur() {
 
+    /**
+     * Fonction déterminant les pions pouvant sauver le roi de cet echec
+     * @author yohan
+     * @see PlateauDeJeu
+     * @see com.echec.ui.EchecApplication
+     * @see Deplacement
+     */
+    public void trouverSauveur() {
         // Liste des déplacements des pions de chaque couleurs
         ArrayList<Deplacement> listeDeplacementsNoirs =  this.plateau.generateListeDeplacementsNoirs(false, true, false);
         ArrayList<Deplacement> listeDeplacementsBlancs =  this.plateau.generateListeDeplacementsBlancs(false, true, false);
@@ -50,6 +120,7 @@ public class Echec {
         ArrayList<Case> listeCasesDeplacementsNoirs = new ArrayList<>();
         ArrayList<Case> listeCasesDeplacementsBlancs= new ArrayList<>();
 
+        // On récupère toutes les cases de déplacements des noirs
         for (Deplacement d : listeDeplacementsNoirs) {
             for (Case c : d.getDeplacement()) {
                 if (!listeCasesDeplacementsNoirs.contains(c)) {
@@ -57,6 +128,8 @@ public class Echec {
                 }
             }
         }
+
+        // On récupère toutes les cases de déplacements des blancs
         for (Deplacement d : listeDeplacementsBlancs) {
             for (Case c : d.getDeplacement()) {
                 if (!listeCasesDeplacementsBlancs.contains(c)) {
@@ -167,9 +240,14 @@ public class Echec {
                 newSauveur.add(d);
             }
         }
+        // On met à jour la liste des sauveurs avec la nouvelle liste
         sauveur = newSauveur;
     }
 
+    /**
+     * Réécriture de la fonction {@linkplain Object#toString()}
+     * @return <code>String</code> Visualisation textuelle de l'échec
+     */
     public String toString() {
         StringBuilder str = new StringBuilder();
         str.append("[@ROI] \n");
