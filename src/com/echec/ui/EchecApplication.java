@@ -825,6 +825,10 @@ public class EchecApplication extends Application {
         }
     }
 
+    /**
+     * Fonction mettant à jour le label des tours en fonction du tour.
+     * @author yohan
+     */
     public void setLabelTour() {
         if (this.jeu.getTour().equals("blanc")) {
             labelTour.setText("Au tour des blancs");

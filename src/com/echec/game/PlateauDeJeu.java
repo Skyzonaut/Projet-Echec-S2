@@ -1851,7 +1851,7 @@ public class PlateauDeJeu {
 
         // Dans cette origine on sélectionne un déplacement random
         Integer choixDeplacement = rand.nextInt(listeDeplacementsPossibles.get(choix).getDeplacement().size());
-
+ 
         // On format en Case les résultats pour qu'ils soient utilisables
         Case origine = listeDeplacementsPossibles.get(choix).getOrigine();
         Case destination = listeDeplacementsPossibles.get(choix).getDeplacement().get(choixDeplacement);
